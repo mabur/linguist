@@ -20,6 +20,10 @@ Vec3d operator-(const Vec3d& a, const Vec3d& b) {
     return Vec3d{a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
+Vec3d operator*(const Vec3d& a, const Vec3d& b) {
+    return Vec3d{ a.x * b.x, a.y * b.y, a.z * b.z };
+}
+
 Vec3d operator*(double a, const Vec3d& b) {
     return Vec3d{a * b.x, a * b.y, a * b.z};
 }
@@ -82,6 +86,14 @@ int colorU8fromF64(double c) {
     return int(std::min(255.0 * c, 255.0));
 }
 
+Vec3d shade(const Intersection& intersection, const Light& light) {
+    const auto offset = light.position - intersection.position;
+    const auto c = dot(offset, intersection.normal);
+    if (c < 0) return Vec3d{};
+    const auto geometry = c / squaredNorm(offset);
+    return geometry * intersection.color * light.color;
+}
+
 void writeImage(const std::string& file_path, const Sphere& sphere, const Light& light) {
     using namespace std;
     ofstream file(file_path);
@@ -98,7 +110,7 @@ void writeImage(const std::string& file_path, const Sphere& sphere, const Light&
             const auto direction = normalize(Vec3d{xd, yd, zd});
             const auto intersection = findIntersection(start, direction, sphere);
             if (std::isfinite(intersection.distance)) {
-                const auto color = intersection.color;
+                const auto color = shade(intersection, light);
                 const auto r = colorU8fromF64(color.x);
                 const auto g = colorU8fromF64(color.y);
                 const auto b = colorU8fromF64(color.z);
@@ -116,6 +128,6 @@ int main() {
     using namespace std;
     cout << "Saving image" << endl;
     const auto spheres = makeSphere();
-    const auto light = Light{Vec3d{0, -10, 0}};
+    const auto light = Light{Vec3d{0, -10, 0}, 10 * Vec3d{1,1,1}};
     writeImage("image.ppm", spheres, light);
 }
