@@ -2,7 +2,6 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <limits>
 #include <string>
 #include <vector>
 
@@ -62,6 +61,10 @@ struct Intersection {
     Vec3d color = {};
 };
 
+bool operator<(const Intersection& a, const Intersection& b) {
+    return a.distance < b.distance;
+}
+
 std::vector<Sphere> makeSpheres() {
     return {
         Sphere{Vec3d{-2, 0, 6}, 1, Vec3d{1, 1, 0}},
@@ -113,16 +116,13 @@ void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres
             const auto yd = double(y - height / 2);
             const auto zd = double(focal_length);
             const auto direction = normalize(Vec3d{xd, yd, zd});
-            auto closest_intersection = Intersection{};
-            for (const auto& sphere : spheres) {
-                const auto intersection = findIntersection(start, direction, sphere);
-                if (intersection.distance < closest_intersection.distance) {
-                    closest_intersection = intersection;
-                }
-            }
 
-            if (std::isfinite(closest_intersection.distance)) {
-                const auto color = shade(closest_intersection, light);
+            auto intersection = Intersection{};
+            for (const auto& sphere : spheres) {
+                intersection = min(intersection, findIntersection(start, direction, sphere));
+            }
+            if (isfinite(intersection.distance)) {
+                const auto color = shade(intersection, light);
                 const auto r = colorU8fromF64(color.x);
                 const auto g = colorU8fromF64(color.y);
                 const auto b = colorU8fromF64(color.z);
