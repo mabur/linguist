@@ -62,8 +62,11 @@ struct Intersection {
     Vec3d color = {};
 };
 
-Sphere makeSphere() {
-    return Sphere{Vec3d{0, 0, 5}, 1, Vec3d{1, 0, 0}};
+std::vector<Sphere> makeSpheres() {
+    return {
+        Sphere{Vec3d{0, 0, 5}, 1, Vec3d{1, 0, 0}},
+        Sphere{Vec3d{0, 1+1000, 0}, 1000*1000, Vec3d{1, 1, 1}},
+    };
 }
 
 Intersection findIntersection(
@@ -94,7 +97,7 @@ Vec3d shade(const Intersection& intersection, const Light& light) {
     return geometry * intersection.color * light.color;
 }
 
-void writeImage(const std::string& file_path, const Sphere& sphere, const Light& light) {
+void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres, const Light& light) {
     using namespace std;
     ofstream file(file_path);
     const auto width = 320;
@@ -108,9 +111,16 @@ void writeImage(const std::string& file_path, const Sphere& sphere, const Light&
             const auto yd = double(y - height / 2);
             const auto zd = double(focal_length);
             const auto direction = normalize(Vec3d{xd, yd, zd});
-            const auto intersection = findIntersection(start, direction, sphere);
-            if (std::isfinite(intersection.distance)) {
-                const auto color = shade(intersection, light);
+            auto closest_intersection = Intersection{};
+            for (const auto& sphere : spheres) {
+                const auto intersection = findIntersection(start, direction, sphere);
+                if (intersection.distance < closest_intersection.distance) {
+                    closest_intersection = intersection;
+                }
+            }
+
+            if (std::isfinite(closest_intersection.distance)) {
+                const auto color = shade(closest_intersection, light);
                 const auto r = colorU8fromF64(color.x);
                 const auto g = colorU8fromF64(color.y);
                 const auto b = colorU8fromF64(color.z);
@@ -127,7 +137,7 @@ void writeImage(const std::string& file_path, const Sphere& sphere, const Light&
 int main() {
     using namespace std;
     cout << "Saving image" << endl;
-    const auto spheres = makeSphere();
+    const auto spheres = makeSpheres();
     const auto light = Light{Vec3d{0, -10, 0}, 10 * Vec3d{1,1,1}};
     writeImage("image.ppm", spheres, light);
 }
