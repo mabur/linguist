@@ -7,10 +7,14 @@
 #include <vector>
 
 struct Vec3d {
-    double x;
-    double y;
-    double z;
+    double x = 0;
+    double y = 0;
+    double z = 0;
 };
+
+Vec3d operator+(const Vec3d& a, const Vec3d& b) {
+    return Vec3d{a.x + b.x, a.y + b.y, a.z + b.z};
+}
 
 Vec3d operator-(const Vec3d& a, const Vec3d& b) {
     return Vec3d{a.x - b.x, a.y - b.y, a.z - b.z};
@@ -39,24 +43,46 @@ Vec3d normalize(const Vec3d& v) {
 struct Sphere {
     Vec3d position;
     double squaredRadius;
+    Vec3d color;
+};
+
+struct Light {
+    Vec3d position;
+    Vec3d color;
+};
+
+struct Intersection {
+    Vec3d position = {};
+    Vec3d normal = {};
+    double distance = INFINITY;
+    Vec3d color = {};
 };
 
 Sphere makeSphere() {
-    return Sphere{Vec3d{0, 0, 5}, 1};
+    return Sphere{Vec3d{0, 0, 5}, 1, Vec3d{1, 0, 0}};
 }
 
-double findIntersection(
+Intersection findIntersection(
     const Vec3d& start, const Vec3d& direction, const Sphere& sphere
 ) {
     const auto offset = sphere.position - start;
     const auto c = dot(direction, offset);
-    if (c < 0.0) return INFINITY;
+    if (c < 0.0) return Intersection{};
     const auto discriminant = c * c - squaredNorm(offset) + sphere.squaredRadius;
-    if (discriminant < 0.0) return INFINITY;
-    return c - std::sqrt(discriminant);
+    if (discriminant < 0.0) return Intersection{};
+    auto intersection = Intersection{};
+    intersection.distance = c - std::sqrt(discriminant);
+    intersection.position = start + intersection.distance * direction;
+    intersection.normal = normalize(intersection.position - sphere.position);
+    intersection.color = sphere.color;
+    return intersection;
 }
 
-void writeImage(const std::string& file_path, const Sphere& sphere) {
+int colorU8fromF64(double c) {
+    return int(std::min(255.0 * c, 255.0));
+}
+
+void writeImage(const std::string& file_path, const Sphere& sphere, const Light& light) {
     using namespace std;
     ofstream file(file_path);
     const auto width = 320;
@@ -71,18 +97,15 @@ void writeImage(const std::string& file_path, const Sphere& sphere) {
             const auto zd = double(focal_length);
             const auto direction = normalize(Vec3d{xd, yd, zd});
             const auto intersection = findIntersection(start, direction, sphere);
-            if (std::isfinite(intersection)) {
-                const auto color = std::max(int(intersection), 255);
-                file
-                    << color << " "
-                    << color << " "
-                    << color << " ";
+            if (std::isfinite(intersection.distance)) {
+                const auto color = intersection.color;
+                const auto r = colorU8fromF64(color.x);
+                const auto g = colorU8fromF64(color.y);
+                const auto b = colorU8fromF64(color.z);
+                file << r << " " << g << " " << b << " ";
             }
             else {
-                file
-                    << 0 << " "
-                    << 0 << " "
-                    << 0 << " ";
+                file << 0 << " " << 0 << " " << 0 << " ";
             }
         }
     }
@@ -93,5 +116,6 @@ int main() {
     using namespace std;
     cout << "Saving image" << endl;
     const auto spheres = makeSphere();
-    writeImage("image.ppm", spheres);
+    const auto light = Light{Vec3d{0, -10, 0}};
+    writeImage("image.ppm", spheres, light);
 }
