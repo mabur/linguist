@@ -64,7 +64,9 @@ struct Intersection {
 
 std::vector<Sphere> makeSpheres() {
     return {
+        Sphere{Vec3d{-2, 0, 6}, 1, Vec3d{1, 1, 0}},
         Sphere{Vec3d{0, 0, 5}, 1, Vec3d{1, 0, 0}},
+        Sphere{Vec3d{2, 0, 4}, 1, Vec3d{0, 0, 1}},
         Sphere{Vec3d{0, 1+1000, 0}, 1000*1000, Vec3d{0, 1, 0}},
     };
 }
