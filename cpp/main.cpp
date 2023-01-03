@@ -65,7 +65,7 @@ struct Intersection {
 std::vector<Sphere> makeSpheres() {
     return {
         Sphere{Vec3d{0, 0, 5}, 1, Vec3d{1, 0, 0}},
-        Sphere{Vec3d{0, 1+1000, 0}, 1000*1000, Vec3d{1, 1, 1}},
+        Sphere{Vec3d{0, 1+1000, 0}, 1000*1000, Vec3d{0, 1, 0}},
     };
 }
 
@@ -138,6 +138,6 @@ int main() {
     using namespace std;
     cout << "Saving image" << endl;
     const auto spheres = makeSpheres();
-    const auto light = Light{Vec3d{0, -10, 0}, 10 * Vec3d{1,1,1}};
+    const auto light = Light{Vec3d{-10, -10, -10}, 20 * Vec3d{1,1,1}};
     writeImage("image.ppm", spheres, light);
 }
