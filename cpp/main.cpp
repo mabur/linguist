@@ -85,7 +85,7 @@ std::vector<Light> makeLights() {
     };
 }
 
-Intersection findIntersection(
+Intersection findSingleIntersection(
     const Vec3d& start, const Vec3d& direction, const Sphere& sphere
 ) {
     const auto offset = sphere.position - start;
@@ -98,6 +98,16 @@ Intersection findIntersection(
     intersection.position = start + intersection.distance * direction;
     intersection.normal = normalize(intersection.position - sphere.position);
     intersection.color = sphere.color;
+    return intersection;
+}
+
+Intersection findIntersection(
+    const Vec3d& start, const Vec3d& direction, const std::vector<Sphere>& spheres
+) {
+    auto intersection = Intersection{};
+    for (const auto& sphere : spheres) {
+        intersection = std::min(intersection, findSingleIntersection(start, direction, sphere));
+    }
     return intersection;
 }
 
@@ -139,12 +149,7 @@ void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres
             const auto yd = double(y - height / 2);
             const auto zd = double(focal_length);
             const auto direction = normalize(Vec3d{xd, yd, zd});
-
-            auto intersection = Intersection{};
-            for (const auto& sphere : spheres) {
-                intersection = min(intersection, findIntersection(start, direction, sphere));
-            }
-            
+            const auto intersection = findIntersection(start, direction, spheres);
             const auto color = shade(intersection, lights);
             const auto r = colorU8fromF64(color.x);
             const auto g = colorU8fromF64(color.y);
