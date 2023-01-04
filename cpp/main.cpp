@@ -94,15 +94,11 @@ Intersection findIntersection(
     const auto discriminant = c * c - squaredNorm(offset) + sphere.squaredRadius;
     if (discriminant < 0.0) return Intersection{};
     auto intersection = Intersection{};
-    intersection.distance = c - std::sqrt(discriminant);
+    intersection.distance = c - sqrt(discriminant);
     intersection.position = start + intersection.distance * direction;
     intersection.normal = normalize(intersection.position - sphere.position);
     intersection.color = sphere.color;
     return intersection;
-}
-
-int colorU8fromF64(double c) {
-    return int(std::min(255.0 * c, 255.0));
 }
 
 Vec3d shadeSingleLight(const Intersection& intersection, const Light& light) {
@@ -111,7 +107,7 @@ Vec3d shadeSingleLight(const Intersection& intersection, const Light& light) {
 }
 
 Vec3d shadeAtmosphere(const Intersection& intersection) {
-    return 0.3 * sqrt(intersection.position.z) * Vec3d{0.5, 0.5, 1};
+    return sqrt(intersection.position.z) * 0.3 * Vec3d{0.5, 0.5, 1};
 }
 
 Vec3d shade(const Intersection& intersection, const std::vector<Light>& lights) {
@@ -120,6 +116,10 @@ Vec3d shade(const Intersection& intersection, const std::vector<Light>& lights) 
         color = color + shadeSingleLight(intersection, light);
     }
     return color;
+}
+
+int colorU8fromF64(double c) {
+    return int(std::min(255.0 * c, 255.0));
 }
 
 void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
