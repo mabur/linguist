@@ -111,6 +111,9 @@ Vec3d shadeAtmosphere(const Intersection& intersection) {
 }
 
 Vec3d shade(const Intersection& intersection, const std::vector<Light>& lights) {
+    if (isinf(intersection.distance)) {
+        return Vec3d{ 1, 1, 1 };
+    }
     auto color = shadeAtmosphere(intersection);
     for (const auto& light : lights) {
         color = color + shadeSingleLight(intersection, light);
@@ -142,8 +145,7 @@ void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres
                 intersection = min(intersection, findIntersection(start, direction, sphere));
             }
             
-            const auto color = isfinite(intersection.distance) ?
-                shade(intersection, lights) : Vec3d{1, 1, 1};
+            const auto color = shade(intersection, lights);
             const auto r = colorU8fromF64(color.x);
             const auto g = colorU8fromF64(color.y);
             const auto b = colorU8fromF64(color.z);
