@@ -72,7 +72,7 @@ std::vector<Sphere> makeSpheres() {
     return {
         Sphere{Vec3d{-2, 0, 6}, 1, Vec3d{MAX_C, MAX_C, MIN_C}},
         Sphere{Vec3d{0, 0, 5}, 1, Vec3d{MAX_C, MIN_C, MIN_C}},
-        Sphere{Vec3d{2, 0, 4}, 1, Vec3d{MIN_C, MIN_C, MAX_C}},
+        Sphere{Vec3d{2, 0, 4}, 1, Vec3d{2*MIN_C, 4*MIN_C, MAX_C}},
         Sphere{Vec3d{0, 1+R, 0}, R * R, Vec3d{MIN_C, MAX_C, MIN_C}},
         Sphere{Vec3d{0, -1 - R, 0}, R * R, Vec3d{MAX_C, MAX_C, MAX_C}},
     };
