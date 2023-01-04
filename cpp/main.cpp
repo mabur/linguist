@@ -80,8 +80,8 @@ std::vector<Sphere> makeSpheres() {
 
 std::vector<Light> makeLights() {
     return {
-        Light{Vec3d{+1, +1, +1}, 0.4 * Vec3d{1,1,0.8}},
-        Light{Vec3d{-1, -1, -1}, 0.4 * Vec3d{0.5,0.5,1}},
+        Light{Vec3d{+1, +1, +2}, 0.4 * Vec3d{1,0.8,0.5}},
+        Light{Vec3d{-1, -1, -2}, 0.4 * Vec3d{0.5,0.5,1}},
     };
 }
 
