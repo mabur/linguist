@@ -50,7 +50,7 @@ struct Sphere {
 };
 
 struct Light {
-    Vec3d position;
+    Vec3d direction;
     Vec3d color;
 };
 
@@ -66,11 +66,22 @@ bool operator<(const Intersection& a, const Intersection& b) {
 }
 
 std::vector<Sphere> makeSpheres() {
+    const auto R = 100000.0;
+    const auto MAX_C = 1.0;
+    const auto MIN_C = 0.1;
     return {
-        Sphere{Vec3d{-2, 0, 6}, 1, Vec3d{1, 1, 0}},
-        Sphere{Vec3d{0, 0, 5}, 1, Vec3d{1, 0, 0}},
-        Sphere{Vec3d{2, 0, 4}, 1, Vec3d{0, 0, 1}},
-        Sphere{Vec3d{0, 1+1000, 0}, 1000*1000, Vec3d{0, 1, 0}},
+        Sphere{Vec3d{-2, 0, 6}, 1, Vec3d{MAX_C, MAX_C, MIN_C}},
+        Sphere{Vec3d{0, 0, 5}, 1, Vec3d{MAX_C, MIN_C, MIN_C}},
+        Sphere{Vec3d{2, 0, 4}, 1, Vec3d{MIN_C, MIN_C, MAX_C}},
+        Sphere{Vec3d{0, 1+R, 0}, R * R, Vec3d{MIN_C, MAX_C, MIN_C}},
+        Sphere{Vec3d{0, -1 - R, 0}, R * R, Vec3d{MAX_C, MAX_C, MAX_C}},
+    };
+}
+
+std::vector<Light> makeLights() {
+    return {
+        Light{Vec3d{+1, +1, +1}, 0.4 * Vec3d{1,1,0.8}},
+        Light{Vec3d{-1, -1, -1}, 0.4 * Vec3d{0.5,0.5,1}},
     };
 }
 
@@ -94,15 +105,24 @@ int colorU8fromF64(double c) {
     return int(std::min(255.0 * c, 255.0));
 }
 
-Vec3d shade(const Intersection& intersection, const Light& light) {
-    const auto offset = light.position - intersection.position;
-    const auto c = dot(offset, intersection.normal);
-    if (c < 0) return Vec3d{};
-    const auto geometry = c / squaredNorm(offset);
+Vec3d shadeSingleLight(const Intersection& intersection, const Light& light) {
+    const auto geometry = std::max(-dot(light.direction, intersection.normal), 0.0);
     return geometry * intersection.color * light.color;
 }
 
-void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres, const Light& light) {
+Vec3d shadeAtmosphere(const Intersection& intersection) {
+    return 0.3 * sqrt(intersection.position.z) * Vec3d{0.5, 0.5, 1};
+}
+
+Vec3d shade(const Intersection& intersection, const std::vector<Light>& lights) {
+    auto color = shadeAtmosphere(intersection);
+    for (const auto& light : lights) {
+        color = color + shadeSingleLight(intersection, light);
+    }
+    return color;
+}
+
+void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
     using namespace std;
     ofstream file(file_path);
     const auto width = 320;
@@ -121,16 +141,13 @@ void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres
             for (const auto& sphere : spheres) {
                 intersection = min(intersection, findIntersection(start, direction, sphere));
             }
-            if (isfinite(intersection.distance)) {
-                const auto color = shade(intersection, light);
-                const auto r = colorU8fromF64(color.x);
-                const auto g = colorU8fromF64(color.y);
-                const auto b = colorU8fromF64(color.z);
-                file << r << " " << g << " " << b << " ";
-            }
-            else {
-                file << 0 << " " << 0 << " " << 0 << " ";
-            }
+            
+            const auto color = isfinite(intersection.distance) ?
+                shade(intersection, lights) : Vec3d{1, 1, 1};
+            const auto r = colorU8fromF64(color.x);
+            const auto g = colorU8fromF64(color.y);
+            const auto b = colorU8fromF64(color.z);
+            file << r << " " << g << " " << b << " ";
         }
     }
     file.close();
@@ -140,6 +157,6 @@ int main() {
     using namespace std;
     cout << "Saving image" << endl;
     const auto spheres = makeSpheres();
-    const auto light = Light{Vec3d{-10, -10, -10}, 20 * Vec3d{1,1,1}};
-    writeImage("image.ppm", spheres, light);
+    const auto lights = makeLights();
+    writeImage("image.ppm", spheres, lights);
 }
