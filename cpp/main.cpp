@@ -138,8 +138,8 @@ int colorU8fromF64(double c) {
 void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
     using namespace std;
     ofstream file(file_path);
-    const auto width = 320;
-    const auto height = 240;
+    const auto width = 800;
+    const auto height = 600;
     const auto focal_length = height / 2;
     file << "P3" << endl << width << " " << height << endl << 255 << endl;
     for (auto y = 0; y < height; ++y) {
