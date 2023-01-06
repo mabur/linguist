@@ -120,7 +120,7 @@ func fold[Source, Target any](collection []Source, f func(Source, Target) Target
 }
 
 func findIntersection(start Vec3d, direction Vec3d, spheres []Sphere) Intersection {
-	intersection := Intersection{}
+	intersection := makeIntersection()
 	distance := math.Inf(+1)
 	for _, sphere := range spheres {
 		i := findSingleIntersection(start, direction, sphere)
