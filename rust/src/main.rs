@@ -1,27 +1,24 @@
-struct Vec3d {
-    x: f64,
-    y: f64,
-    z: f64,
-}
+
+type Vec3d = [f64; 3];
 
 fn add(a: &Vec3d, b: &Vec3d) -> Vec3d {
-    Vec3d{x: a.x + b.x, y: a.y + b.y, z: a.z + b.z}
+    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
 fn sub(a: &Vec3d, b: &Vec3d) -> Vec3d {
-    Vec3d{x: a.x - b.x, y: a.y - b.y, z: a.z - b.z}
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
 fn mul(a: &Vec3d, b: &Vec3d) -> Vec3d {
-    Vec3d{x: a.x * b.x, y: a.y * b.y, z: a.z * b.z}
+    [a[0] * b[0], a[1] * b[1], a[2] * b[2]]
 }
 
 fn muls(a: f64, b: &Vec3d) -> Vec3d {
-    Vec3d{x: a * b.x, y: a * b.y, z: a * b.z}
+    [a * b[0], a * b[1], a * b[2]]
 }
 
 fn dot(a: &Vec3d, b: &Vec3d) -> f64 {
-    a.x * b.x + a.y * b.y + a.z * b.z
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
 fn squared_norm(v: &Vec3d) -> f64 {
@@ -56,10 +53,10 @@ struct Intersection {
 
 fn make_intersection() -> Intersection {
     Intersection{
-        position: Vec3d{x: 0.0, y: 0.0, z: 0.0},
-        normal: Vec3d{x: 0.0, y: 0.0, z: 0.0},
+        position: [0.0, 0.0, 0.0],
+        normal: [0.0, 0.0, 0.0],
         distance: f64::INFINITY,
-        color: Vec3d{x: 0.0, y: 0.0, z: 0.0},
+        color: [0.0, 0.0, 0.0],
     }
 }
 
@@ -68,11 +65,11 @@ fn makeSpheres() -> Vec<Sphere> {
     let MAX_C = 1.0;
     let MIN_C = 0.1;
     return vec![
-        Sphere{position: Vec3d{x: -2.0, y: 0.0, z: 6.0}, squaredRadius: 1.0, color: Vec3d{x: MAX_C, y: MAX_C, z: MIN_C}},
-        Sphere{position: Vec3d{x: 0.0, y: 0.0, z: 5.0}, squaredRadius: 1.0, color: Vec3d{x: MAX_C, y: MIN_C, z: MIN_C}},
-        Sphere{position: Vec3d{x: 2.0, y: 0.0, z: 4.0}, squaredRadius: 1.0, color: Vec3d{x: 2.0*MIN_C, y: 4.0*MIN_C, z: MAX_C}},
-        Sphere{position: Vec3d{x: 0.0, y: 1.0+R, z: 0.0}, squaredRadius: R * R, color: Vec3d{x: MIN_C, y: MAX_C, z: MIN_C}},
-        Sphere{position: Vec3d{x: 0.0, y: -1.0 - R, z: 0.0}, squaredRadius: R * R, color: Vec3d{x: MAX_C, y: MAX_C, z: MAX_C}},
+        Sphere{position:[-2., 0., 6.], squaredRadius:1., color: [MAX_C, MAX_C, MIN_C]},
+        Sphere{position:[0., 0., 5.], squaredRadius:1., color: [MAX_C, MIN_C, MIN_C]},
+        Sphere{position:[2., 0., 4.], squaredRadius:1., color: [2.0*MIN_C, 4.0*MIN_C, MAX_C]},
+        Sphere{position:[0., 1.+R, 0.], squaredRadius:R*R, color: [MIN_C, MAX_C, MIN_C]},
+        Sphere{position:[0., -1.-R, 0.], squaredRadius:R*R, color: [MAX_C, MAX_C, MAX_C]},
     ];
 }
 
