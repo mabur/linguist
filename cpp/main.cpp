@@ -11,35 +11,35 @@ struct Vec3d {
     double z = 0;
 };
 
-Vec3d operator+(const Vec3d& a, const Vec3d& b) {
+Vec3d operator+(Vec3d a, Vec3d b) {
     return Vec3d{a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
-Vec3d operator-(const Vec3d& a, const Vec3d& b) {
+Vec3d operator-(Vec3d a, Vec3d b) {
     return Vec3d{a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-Vec3d operator*(const Vec3d& a, const Vec3d& b) {
+Vec3d operator*(Vec3d a, Vec3d b) {
     return Vec3d{ a.x * b.x, a.y * b.y, a.z * b.z };
 }
 
-Vec3d operator*(double a, const Vec3d& b) {
+Vec3d operator*(double a, Vec3d b) {
     return Vec3d{a * b.x, a * b.y, a * b.z};
 }
 
-double dot(const Vec3d& a, const Vec3d& b) {
+double dot(Vec3d a, Vec3d b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-double squaredNorm(const Vec3d& v) {
+double squaredNorm(Vec3d v) {
     return dot(v, v);
 }
 
-double norm(const Vec3d& v) {
+double norm(Vec3d v) {
     return sqrt(squaredNorm(v));
 }
 
-Vec3d normalize(const Vec3d& v) {
+Vec3d normalize(Vec3d v) {
     return 1.0 / norm(v) * v;
 }
 
@@ -67,7 +67,7 @@ struct Intersection {
     Vec3d color = {};
 };
 
-bool operator<(const Intersection& a, const Intersection& b) {
+bool operator<(Intersection a, Intersection b) {
     return a.distance < b.distance;
 }
 
@@ -92,7 +92,7 @@ World makeWorld() {
 }
 
 Intersection findSingleIntersection(
-    const Vec3d& start, const Vec3d& direction, const Sphere& sphere
+    Vec3d start, Vec3d direction, Sphere sphere
 ) {
     const auto offset = sphere.position - start;
     const auto c = dot(direction, offset);
@@ -108,7 +108,7 @@ Intersection findSingleIntersection(
 }
 
 Intersection findIntersection(
-    const Vec3d& start, const Vec3d& direction, const std::vector<Sphere>& spheres
+    Vec3d start, Vec3d direction, const std::vector<Sphere>& spheres
 ) {
     auto intersection = Intersection{};
     for (const auto& sphere : spheres) {
@@ -117,16 +117,16 @@ Intersection findIntersection(
     return intersection;
 }
 
-Vec3d shadeSingleLight(const Intersection& intersection, const Light& light) {
+Vec3d shadeSingleLight(Intersection intersection, Light light) {
     const auto geometry = std::max(-dot(light.direction, intersection.normal), 0.0);
     return geometry * intersection.color * light.color;
 }
 
-Vec3d shadeAtmosphere(const Intersection& intersection, const Vec3d& atmosphere_color) {
+Vec3d shadeAtmosphere(Intersection intersection, Vec3d atmosphere_color) {
     return sqrt(intersection.position.z) * atmosphere_color;
 }
 
-Vec3d shade(const Intersection& intersection, const World& world) {
+Vec3d shade(Intersection intersection, World world) {
     if (isinf(intersection.distance)) {
         return Vec3d{ 1, 1, 1 };
     }
@@ -149,11 +149,11 @@ void writePixel(
     int height,
     const World& world
 ) {
-    const auto start = Vec3d{ 0, 0, 0 };
+    const auto start = Vec3d{0, 0, 0};
     const auto xd = double(x - width / 2);
     const auto yd = double(y - height / 2);
     const auto zd = double(height / 2);
-    const auto direction = normalize(Vec3d{ xd, yd, zd });
+    const auto direction = normalize(Vec3d{xd, yd, zd});
     const auto intersection = findIntersection(start, direction, world.spheres);
     const auto color = shade(intersection, world);
     const auto r = colorU8fromF64(color.x);
