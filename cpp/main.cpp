@@ -94,12 +94,16 @@ World makeWorld() {
 Intersection findSingleIntersection(
     Vec3d start, Vec3d direction, Sphere sphere
 ) {
+    auto intersection = Intersection{};
     const auto offset = sphere.position - start;
     const auto c = dot(direction, offset);
-    if (c < 0.0) return Intersection{};
+    if (c < 0.0) {
+        return intersection;
+    }
     const auto discriminant = c * c - squaredNorm(offset) + sphere.squaredRadius;
-    if (discriminant < 0.0) return Intersection{};
-    auto intersection = Intersection{};
+    if (discriminant < 0.0) {
+        return intersection;
+    }
     intersection.distance = c - sqrt(discriminant);
     intersection.position = start + intersection.distance * direction;
     intersection.normal = normalize(intersection.position - sphere.position);
