@@ -129,7 +129,7 @@ fn shade_atmosphere(intersection: &Intersection) -> Vec3d{
 
 fn shade(intersection: &Intersection, lights: &Vec<Light>) -> Vec3d {
     if intersection.distance.is_infinite() {
-        [1., 1., 1.];
+        return [1., 1., 1.];
     }
     let mut color = shade_atmosphere(intersection);
     for light in lights.iter() {
