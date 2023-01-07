@@ -170,26 +170,29 @@ func colorU8fromF64(c float64) uint8 {
 	return uint8(math.Min(255.0*c, 255.0))
 }
 
+func writePixel(file *os.File, x, y, width, height int, spheres []Sphere, lights []Light) {
+	start := Vec3d{0, 0, 0}
+	xd := float64(x - width/2)
+	yd := float64(y - height/2)
+	zd := float64(height / 2)
+	direction := normalize(Vec3d{xd, yd, zd})
+	intersection := findIntersection(start, direction, spheres)
+	color := shade(intersection, lights)
+	r := colorU8fromF64(color.x)
+	g := colorU8fromF64(color.y)
+	b := colorU8fromF64(color.z)
+	fmt.Fprintf(file, "%d %d %d ", r, g, b)
+}
+
 func writeImage(file_path string, spheres []Sphere, lights []Light) {
 	file, _ := os.Create(file_path)
 	defer file.Close()
 	WIDTH := 800
 	HEIGHT := 600
-	FOCAL_LENGTH := HEIGHT / 2
 	fmt.Fprintf(file, "P3\n%d\n%d\n%d\n", WIDTH, HEIGHT, 255)
 	for y := 0; y < HEIGHT; y++ {
 		for x := 0; x < WIDTH; x++ {
-			start := Vec3d{0, 0, 0}
-			xd := float64(x - WIDTH/2)
-			yd := float64(y - HEIGHT/2)
-			zd := float64(FOCAL_LENGTH)
-			direction := normalize(Vec3d{xd, yd, zd})
-			intersection := findIntersection(start, direction, spheres)
-			color := shade(intersection, lights)
-			r := colorU8fromF64(color.x)
-			g := colorU8fromF64(color.y)
-			b := colorU8fromF64(color.z)
-			fmt.Fprintf(file, "%d %d %d ", r, g, b)
+			writePixel(file, x, y, WIDTH, HEIGHT, spheres, lights)
 		}
 	}
 }

@@ -164,25 +164,36 @@ fn color_u8_from_f64(c: f64) -> u8 {
     (255.0 * c).min(255.0) as u8
 }
 
+fn write_pixel(
+    file: &mut File,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    spheres: &Vec<Sphere>,
+    lights: &Vec<Light>,
+) {
+    let start = [0., 0., 0.];
+    let xd = (x - width / 2) as f64;
+    let yd = (y - height / 2) as f64;
+    let zd = (height / 2) as f64;
+    let direction = normalize([xd, yd, zd]);
+    let intersection = find_intersection(start, direction, &spheres);
+    let color = shade(intersection, &lights);
+    let r = color_u8_from_f64(color[0]);
+    let g = color_u8_from_f64(color[1]);
+    let b = color_u8_from_f64(color[2]);
+    write!(file, "{} {} {} ", r, g, b).unwrap();
+}
+
 fn write_image(file_path: &str, spheres: &Vec<Sphere>, lights: &Vec<Light>) {
     let mut file = File::create(file_path).unwrap();
     const WIDTH: i32 = 800;
     const HEIGHT: i32 = 600;
-    const FOCAL_LENGTH: i32 = HEIGHT / 2;
     write!(file, "{}\n{}\n{}\n{}\n", "P3", WIDTH, HEIGHT, 255).unwrap();
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
-            let start = [0., 0., 0.];
-            let xd = (x - WIDTH / 2) as f64;
-            let yd = (y - HEIGHT / 2) as f64;
-            let zd = (FOCAL_LENGTH) as f64;
-            let direction = normalize([xd, yd, zd]);
-            let intersection = find_intersection(start, direction, &spheres);
-            let color = shade(intersection, &lights);
-            let r = color_u8_from_f64(color[0]);
-            let g = color_u8_from_f64(color[1]);
-            let b = color_u8_from_f64(color[2]);
-            write!(file, "{} {} {} ", r, g, b).unwrap();
+            write_pixel(&mut file, x, y, WIDTH, HEIGHT, &spheres, &lights);
         }
     }
 }

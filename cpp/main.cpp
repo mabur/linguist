@@ -135,26 +135,37 @@ int colorU8fromF64(double c) {
     return int(std::min(255.0 * c, 255.0));
 }
 
+void writePixel(
+    std::ofstream& file,
+    int x,
+    int y,
+    int width,
+    int height,
+    const std::vector<Sphere>& spheres,
+    const std::vector<Light>& lights
+) {
+    const auto start = Vec3d{ 0, 0, 0 };
+    const auto xd = double(x - width / 2);
+    const auto yd = double(y - height / 2);
+    const auto zd = double(height / 2);
+    const auto direction = normalize(Vec3d{ xd, yd, zd });
+    const auto intersection = findIntersection(start, direction, spheres);
+    const auto color = shade(intersection, lights);
+    const auto r = colorU8fromF64(color.x);
+    const auto g = colorU8fromF64(color.y);
+    const auto b = colorU8fromF64(color.z);
+    file << r << " " << g << " " << b << " ";
+}
+
 void writeImage(const std::string& file_path, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
     using namespace std;
     ofstream file(file_path);
-    const auto width = 800;
-    const auto height = 600;
-    const auto focal_length = height / 2;
-    file << "P3" << endl << width << " " << height << endl << 255 << endl;
-    for (auto y = 0; y < height; ++y) {
-        for (auto x = 0; x < width; ++x) {
-            const auto start = Vec3d{0, 0, 0};
-            const auto xd = double(x - width / 2);
-            const auto yd = double(y - height / 2);
-            const auto zd = double(focal_length);
-            const auto direction = normalize(Vec3d{xd, yd, zd});
-            const auto intersection = findIntersection(start, direction, spheres);
-            const auto color = shade(intersection, lights);
-            const auto r = colorU8fromF64(color.x);
-            const auto g = colorU8fromF64(color.y);
-            const auto b = colorU8fromF64(color.z);
-            file << r << " " << g << " " << b << " ";
+    const auto WIDTH = 800;
+    const auto HEIGHT = 600;
+    file << "P3" << endl << WIDTH << " " << HEIGHT << endl << 255 << endl;
+    for (auto y = 0; y < HEIGHT; ++y) {
+        for (auto x = 0; x < WIDTH; ++x) {
+            writePixel(file, x, y, WIDTH, HEIGHT, spheres, lights);
         }
     }
     file.close();
