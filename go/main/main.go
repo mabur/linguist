@@ -55,6 +55,12 @@ type Light struct {
 	color     Vec3d
 }
 
+type World struct {
+	spheres          []Sphere
+	lights           []Light
+	atmosphere_color Vec3d
+}
+
 type Intersection struct {
 	position Vec3d
 	normal   Vec3d
@@ -73,24 +79,24 @@ func closestIntersection(a, b Intersection) Intersection {
 	return b
 }
 
-func makeSpheres() []Sphere {
+func makeWorld() World {
 	R := 100000.0
 	MAX_C := 1.0
 	MIN_C := 0.1
-	return []Sphere{
+	world := World{}
+	world.spheres = []Sphere{
 		{Vec3d{-2, 0, 6}, 1, Vec3d{MAX_C, MAX_C, MIN_C}},
 		{Vec3d{0, 0, 5}, 1, Vec3d{MAX_C, MIN_C, MIN_C}},
 		{Vec3d{2, 0, 4}, 1, Vec3d{2 * MIN_C, 4 * MIN_C, MAX_C}},
 		{Vec3d{0, 1 + R, 0}, R * R, Vec3d{MIN_C, MAX_C, MIN_C}},
 		{Vec3d{0, -1 - R, 0}, R * R, Vec3d{MAX_C, MAX_C, MAX_C}},
 	}
-}
-
-func makeLights() []Light {
-	return []Light{
+	world.lights = []Light{
 		{Vec3d{+1, +1, +2}, muls(0.4, Vec3d{1, 0.8, 0.5})},
 		{Vec3d{-1, -1, -2}, muls(0.4, Vec3d{0.5, 0.5, 1})},
 	}
+	world.atmosphere_color = muls(0.3, Vec3d{0.5, 0.5, 1})
+	return world
 }
 
 func findSingleIntersection(start Vec3d, direction Vec3d, sphere Sphere) Intersection {
@@ -125,16 +131,16 @@ func shadeSingleLight(intersection Intersection, light Light) Vec3d {
 	return muls(geometry, mul(intersection.color, light.color))
 }
 
-func shadeAtmosphere(intersection Intersection) Vec3d {
-	return muls(math.Sqrt(intersection.position.z)*0.3, Vec3d{0.5, 0.5, 1})
+func shadeAtmosphere(intersection Intersection, atmosphere_color Vec3d) Vec3d {
+	return muls(math.Sqrt(intersection.position.z), atmosphere_color)
 }
 
-func shade(intersection Intersection, lights []Light) Vec3d {
+func shade(intersection Intersection, world World) Vec3d {
 	if math.IsInf(intersection.distance, 1) {
 		return Vec3d{1, 1, 1}
 	}
-	color := shadeAtmosphere(intersection)
-	for _, light := range lights {
+	color := shadeAtmosphere(intersection, world.atmosphere_color)
+	for _, light := range world.lights {
 		color = add(color, shadeSingleLight(intersection, light))
 	}
 	return color
@@ -144,21 +150,21 @@ func colorU8fromF64(c float64) uint8 {
 	return uint8(math.Min(255.0*c, 255.0))
 }
 
-func writePixel(file *os.File, x, y, width, height int, spheres []Sphere, lights []Light) {
+func writePixel(file *os.File, x, y, width, height int, world World) {
 	start := Vec3d{0, 0, 0}
 	xd := float64(x - width/2)
 	yd := float64(y - height/2)
 	zd := float64(height / 2)
 	direction := normalize(Vec3d{xd, yd, zd})
-	intersection := findIntersection(start, direction, spheres)
-	color := shade(intersection, lights)
+	intersection := findIntersection(start, direction, world.spheres)
+	color := shade(intersection, world)
 	r := colorU8fromF64(color.x)
 	g := colorU8fromF64(color.y)
 	b := colorU8fromF64(color.z)
 	fmt.Fprintf(file, "%d %d %d ", r, g, b)
 }
 
-func writeImage(file_path string, spheres []Sphere, lights []Light) {
+func writeImage(file_path string, world World) {
 	file, _ := os.Create(file_path)
 	defer file.Close()
 	WIDTH := 800
@@ -166,14 +172,13 @@ func writeImage(file_path string, spheres []Sphere, lights []Light) {
 	fmt.Fprintf(file, "P3\n%d\n%d\n%d\n", WIDTH, HEIGHT, 255)
 	for y := 0; y < HEIGHT; y++ {
 		for x := 0; x < WIDTH; x++ {
-			writePixel(file, x, y, WIDTH, HEIGHT, spheres, lights)
+			writePixel(file, x, y, WIDTH, HEIGHT, world)
 		}
 	}
 }
 
 func main() {
 	fmt.Println("Saving image")
-	spheres := makeSpheres()
-	lights := makeLights()
-	writeImage("image.ppm", spheres, lights)
+	world := makeWorld()
+	writeImage("image.ppm", world)
 }
