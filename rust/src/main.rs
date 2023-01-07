@@ -68,9 +68,9 @@ fn closest_intersection(a: Intersection, b: Intersection) -> Intersection {
 }
 
 fn make_spheres() -> Vec<Sphere> {
-    let R = 100000.0;
-    let MAX_C = 1.0;
-    let MIN_C = 0.1;
+    const R: f64 = 100000.0;
+    const MAX_C: f64 = 1.0;
+    const MIN_C: f64 = 0.1;
     return vec![
         Sphere{position:[-2., 0., 6.], squared_radius:1., color: [MAX_C, MAX_C, MIN_C]},
         Sphere{position:[0., 0., 5.], squared_radius:1., color: [MAX_C, MIN_C, MIN_C]},
@@ -144,16 +144,16 @@ fn color_u8_from_f64(c: f64) -> u8 {
 
 fn write_image(file_path: &str, spheres: &Vec<Sphere>, lights: &Vec<Light>) -> Result<()> {
     let mut file = File::create(file_path)?;
-    let width = 800;
-    let height = 600;
-    let focal_length = height / 2;
-    write!(file, "{}\n{}\n{}\n{}\n", "P3", width, height, 255)?;
-    for y in 0..height {
-        for x in 0..width {
+    const WIDTH: i32 = 800;
+    const HEIGHT: i32 = 600;
+    const FOCAL_LENGTH: i32 = HEIGHT / 2;
+    write!(file, "{}\n{}\n{}\n{}\n", "P3", WIDTH, HEIGHT, 255)?;
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
             let start = [0., 0., 0.];
-            let xd = (x - width / 2) as f64;
-            let yd = (y - height / 2) as f64;
-            let zd = (focal_length) as f64;
+            let xd = (x - WIDTH / 2) as f64;
+            let yd = (y - HEIGHT / 2) as f64;
+            let zd = (FOCAL_LENGTH) as f64;
             let direction = normalize([xd, yd, zd]);
             let intersection = find_intersection(start, direction, &spheres);
             let color = shade(&intersection, &lights);
