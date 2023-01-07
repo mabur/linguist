@@ -120,25 +120,20 @@ func fold[Source, Target any](collection []Source, f func(Source, Target) Target
 }
 
 func findIntersection(start Vec3d, direction Vec3d, spheres []Sphere) Intersection {
-	intersection := makeIntersection()
-	distance := math.Inf(+1)
+	i1 := makeIntersection()
 	for _, sphere := range spheres {
-		i := findSingleIntersection(start, direction, sphere)
-		if i.distance < distance {
-			intersection = i
-			distance = i.distance
-		}
+		i2 := findSingleIntersection(start, direction, sphere)
+		i1 = closestIntersection(i1, i2)
 	}
-	return intersection
+	return i1
 }
 
 func findIntersectionFold(start Vec3d, direction Vec3d, spheres []Sphere) Intersection {
-	intersection := makeIntersection()
-	closestSphereIntersection := func(s Sphere, i1 Intersection) Intersection {
+	closest := func(s Sphere, i1 Intersection) Intersection {
 		i2 := findSingleIntersection(start, direction, s)
 		return closestIntersection(i1, i2)
 	}
-	return fold(spheres, closestSphereIntersection, intersection)
+	return fold(spheres, closest, makeIntersection())
 }
 
 func shadeSingleLight(intersection Intersection, light Light) Vec3d {
@@ -165,11 +160,10 @@ func shadeFold(intersection Intersection, lights []Light) Vec3d {
 	if math.IsInf(intersection.distance, 1) {
 		return Vec3d{1, 1, 1}
 	}
-	color := shadeAtmosphere(intersection)
-	addLight := func(light Light, c Vec3d) Vec3d {
-		return add(shadeSingleLight(intersection, light), c)
+	addLight := func(light Light, color Vec3d) Vec3d {
+		return add(shadeSingleLight(intersection, light), color)
 	}
-	return fold(lights, addLight, color)
+	return fold(lights, addLight, shadeAtmosphere(intersection))
 }
 
 func colorU8fromF64(c float64) uint8 {
@@ -179,16 +173,16 @@ func colorU8fromF64(c float64) uint8 {
 func writeImage(file_path string, spheres []Sphere, lights []Light) {
 	file, _ := os.Create(file_path)
 	defer file.Close()
-	width := 800
-	height := 600
-	focal_length := height / 2
-	fmt.Fprintf(file, "P3\n%d\n%d\n%d\n", width, height, 255)
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	WIDTH := 800
+	HEIGHT := 600
+	FOCAL_LENGTH := HEIGHT / 2
+	fmt.Fprintf(file, "P3\n%d\n%d\n%d\n", WIDTH, HEIGHT, 255)
+	for y := 0; y < HEIGHT; y++ {
+		for x := 0; x < WIDTH; x++ {
 			start := Vec3d{0, 0, 0}
-			xd := float64(x - width/2)
-			yd := float64(y - height/2)
-			zd := float64(focal_length)
+			xd := float64(x - WIDTH/2)
+			yd := float64(y - HEIGHT/2)
+			zd := float64(FOCAL_LENGTH)
 			direction := normalize(Vec3d{xd, yd, zd})
 			intersection := findIntersection(start, direction, spheres)
 			color := shade(intersection, lights)

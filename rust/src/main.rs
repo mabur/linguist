@@ -92,16 +92,16 @@ fn make_lights() -> Vec<Light> {
 fn find_single_intersection(
     start: Vec3d, direction: Vec3d, sphere: Sphere
 ) -> Intersection {
+    let mut intersection = make_intersection();
     let offset = sub(sphere.position, start);
     let c = dot(direction, offset);
     if c < 0.0 {
-        return make_intersection()
+        return intersection
     };
     let discriminant = c * c - squared_norm(offset) + sphere.squared_radius;
     if discriminant < 0.0 {
-        return make_intersection()
+        return intersection
     } 
-    let mut intersection = make_intersection();
     intersection.distance = c - discriminant.sqrt();
     intersection.position = add(start, muls(intersection.distance, direction));
     intersection.normal = normalize(sub(intersection.position, sphere.position));
@@ -111,13 +111,13 @@ fn find_single_intersection(
 
 fn find_intersection(
     start: Vec3d, direction: Vec3d, spheres: &Vec<Sphere>
-) -> Intersection{
-    let mut intersection = make_intersection();
+) -> Intersection {
+    let mut i1 = make_intersection();
     for sphere in spheres.iter() {
         let i2 = find_single_intersection(start, direction, *sphere);
-        intersection = closest_intersection(intersection, i2);
+        i1 = closest_intersection(i1, i2);
     }
-    return intersection;
+    return i1;
 }
 
 fn find_intersection_fold(
@@ -125,18 +125,18 @@ fn find_intersection_fold(
 ) -> Intersection{
     let closest = |i1: Intersection, sphere: &Sphere| -> Intersection {
         let i2 = find_single_intersection(start, direction, *sphere);
-        if i1.distance < i2.distance {i1} else {i2}
+        closest_intersection(i1, i2)
     };
-    return spheres.iter().fold(make_intersection(), closest);
+    spheres.iter().fold(make_intersection(), closest)
 }
 
 fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
     let geometry = 0.0_f64.max(-dot(light.direction, intersection.normal));
-    return muls(geometry, mul(intersection.color, light.color));
+    muls(geometry, mul(intersection.color, light.color))
 }
 
 fn shade_atmosphere(intersection: Intersection) -> Vec3d{
-    return muls(intersection.position[2].sqrt() * 0.3, [0.5, 0.5, 1.0]);
+    muls(intersection.position[2].sqrt() * 0.3, [0.5, 0.5, 1.0])
 }
 
 fn shade(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
