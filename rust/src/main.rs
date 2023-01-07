@@ -150,6 +150,16 @@ fn shade(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
     return color;
 }
 
+fn shade_fold(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
+    if intersection.distance.is_infinite() {
+        return [1., 1., 1.];
+    }
+    let add_light = |color: Vec3d, light: &Light| -> Vec3d {
+        add(color, shade_single_light(intersection, *light))
+    };
+    return lights.iter().fold(shade_atmosphere(intersection), add_light);
+}
+
 fn color_u8_from_f64(c: f64) -> u8 {
     (255.0 * c).min(255.0) as u8
 }
