@@ -120,6 +120,16 @@ fn find_intersection(
     return intersection;
 }
 
+fn find_intersection_fold(
+    start: Vec3d, direction: Vec3d, spheres: &Vec<Sphere>
+) -> Intersection{
+    let closest = |i1: Intersection, sphere: &Sphere| -> Intersection {
+        let i2 = find_single_intersection(start, direction, *sphere);
+        if i1.distance < i2.distance {i1} else {i2}
+    };
+    return spheres.iter().fold(make_intersection(), closest);
+}
+
 fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
     let geometry = 0.0_f64.max(-dot(light.direction, intersection.normal));
     return muls(geometry, mul(intersection.color, light.color));
