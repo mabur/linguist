@@ -35,17 +35,20 @@ fn normalize(v: Vec3d) -> Vec3d {
     muls(1.0 / norm(v), v)
 }
 
+#[derive(Copy, Clone)]
 struct Sphere {
     position: Vec3d,
     squared_radius: f64,
     color: Vec3d,
 }
 
+#[derive(Copy, Clone)]
 struct Light {
     direction: Vec3d,
     color: Vec3d,
 }
 
+#[derive(Copy, Clone)]
 struct Intersection {
     position: Vec3d,
     normal: Vec3d,
@@ -87,7 +90,7 @@ fn make_lights() -> Vec<Light> {
 }
 
 fn find_single_intersection(
-    start: Vec3d, direction: Vec3d, sphere: &Sphere
+    start: Vec3d, direction: Vec3d, sphere: Sphere
 ) -> Intersection {
     let offset = sub(sphere.position, start);
     let c = dot(direction, offset);
@@ -111,28 +114,28 @@ fn find_intersection(
 ) -> Intersection{
     let mut intersection = make_intersection();
     for sphere in spheres.iter() {
-        let i2 = find_single_intersection(start, direction, sphere);
+        let i2 = find_single_intersection(start, direction, *sphere);
         intersection = closest_intersection(intersection, i2);
     }
     return intersection;
 }
 
-fn shade_single_light(intersection: &Intersection, light: &Light) -> Vec3d{
+fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
     let geometry = 0.0_f64.max(-dot(light.direction, intersection.normal));
     return muls(geometry, mul(intersection.color, light.color));
 }
 
-fn shade_atmosphere(intersection: &Intersection) -> Vec3d{
+fn shade_atmosphere(intersection: Intersection) -> Vec3d{
     return muls(intersection.position[2].sqrt() * 0.3, [0.5, 0.5, 1.0]);
 }
 
-fn shade(intersection: &Intersection, lights: &Vec<Light>) -> Vec3d {
+fn shade(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
     if intersection.distance.is_infinite() {
         return [1., 1., 1.];
     }
     let mut color = shade_atmosphere(intersection);
     for light in lights.iter() {
-        color = add(color, shade_single_light(intersection, light));
+        color = add(color, shade_single_light(intersection, *light));
     }
     return color;
 }
@@ -155,7 +158,7 @@ fn write_image(file_path: &str, spheres: &Vec<Sphere>, lights: &Vec<Light>) {
             let zd = (FOCAL_LENGTH) as f64;
             let direction = normalize([xd, yd, zd]);
             let intersection = find_intersection(start, direction, &spheres);
-            let color = shade(&intersection, &lights);
+            let color = shade(intersection, &lights);
             let r = color_u8_from_f64(color[0]);
             let g = color_u8_from_f64(color[1]);
             let b = color_u8_from_f64(color[2]);
