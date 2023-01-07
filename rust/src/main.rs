@@ -48,6 +48,12 @@ struct Light {
     color: Vec3d,
 }
 
+struct World {
+    spheres: Vec<Sphere>,
+    lights: Vec<Light>,
+    atmosphere_color: Vec3d,
+}
+
 #[derive(Copy, Clone)]
 struct Intersection {
     position: Vec3d,
@@ -65,28 +71,23 @@ fn make_intersection() -> Intersection {
     }
 }
 
-fn closest_intersection(a: Intersection, b: Intersection) -> Intersection {
-    if a.distance < b.distance {a} else {b}
-}
-
-fn make_spheres() -> Vec<Sphere> {
+fn make_world() -> World {
     const R: f64 = 100000.0;
     const MAX_C: f64 = 1.0;
     const MIN_C: f64 = 0.1;
-    return vec![
+    let spheres = vec![
         Sphere{position:[-2., 0., 6.], squared_radius:1., color: [MAX_C, MAX_C, MIN_C]},
         Sphere{position:[0., 0., 5.], squared_radius:1., color: [MAX_C, MIN_C, MIN_C]},
         Sphere{position:[2., 0., 4.], squared_radius:1., color: [2.0*MIN_C, 4.0*MIN_C, MAX_C]},
         Sphere{position:[0., 1.+R, 0.], squared_radius:R*R, color: [MIN_C, MAX_C, MIN_C]},
         Sphere{position:[0., -1.-R, 0.], squared_radius:R*R, color: [MAX_C, MAX_C, MAX_C]},
     ];
-}
-
-fn make_lights() -> Vec<Light> {
-    vec![
+    let lights = vec![
         Light{direction:[1., 1., 2.], color:muls(0.4, [1.0,0.8,0.5])},
         Light{direction:[-1., -1., -2.], color:muls(0.4, [0.5,0.5,1.0])},
-    ]
+    ];
+    let atmosphere_color = muls(0.3, [0.5, 0.5, 1.0]);
+    return World{spheres, lights, atmosphere_color};
 }
 
 fn find_single_intersection(
@@ -115,7 +116,9 @@ fn find_intersection(
     let mut i1 = make_intersection();
     for sphere in spheres.iter() {
         let i2 = find_single_intersection(start, direction, *sphere);
-        i1 = closest_intersection(i1, i2);
+        if i2.distance < i1.distance {
+            i1 = i2
+        }
     }
     return i1;
 }
@@ -125,16 +128,16 @@ fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
     muls(geometry, mul(intersection.color, light.color))
 }
 
-fn shade_atmosphere(intersection: Intersection) -> Vec3d{
-    muls(intersection.position[2].sqrt() * 0.3, [0.5, 0.5, 1.0])
+fn shade_atmosphere(intersection: Intersection, atmosphere_color: Vec3d) -> Vec3d{
+    muls(intersection.position[2].sqrt(), atmosphere_color)
 }
 
-fn shade(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
+fn shade(intersection: Intersection, world: &World) -> Vec3d {
     if intersection.distance.is_infinite() {
         return [1., 1., 1.];
     }
-    let mut color = shade_atmosphere(intersection);
-    for light in lights.iter() {
+    let mut color = shade_atmosphere(intersection, world.atmosphere_color);
+    for light in world.lights.iter() {
         color = add(color, shade_single_light(intersection, *light));
     }
     return color;
@@ -150,37 +153,35 @@ fn write_pixel(
     y: i32,
     width: i32,
     height: i32,
-    spheres: &Vec<Sphere>,
-    lights: &Vec<Light>,
+    world: &World,
 ) {
     let start = [0., 0., 0.];
     let xd = (x - width / 2) as f64;
     let yd = (y - height / 2) as f64;
     let zd = (height / 2) as f64;
     let direction = normalize([xd, yd, zd]);
-    let intersection = find_intersection(start, direction, &spheres);
-    let color = shade(intersection, &lights);
+    let intersection = find_intersection(start, direction, &world.spheres);
+    let color = shade(intersection, &world);
     let r = color_u8_from_f64(color[0]);
     let g = color_u8_from_f64(color[1]);
     let b = color_u8_from_f64(color[2]);
     write!(file, "{} {} {} ", r, g, b).unwrap();
 }
 
-fn write_image(file_path: &str, spheres: &Vec<Sphere>, lights: &Vec<Light>) {
+fn write_image(file_path: &str, world: &World) {
     let mut file = File::create(file_path).unwrap();
     const WIDTH: i32 = 800;
     const HEIGHT: i32 = 600;
     write!(file, "{}\n{}\n{}\n{}\n", "P3", WIDTH, HEIGHT, 255).unwrap();
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
-            write_pixel(&mut file, x, y, WIDTH, HEIGHT, &spheres, &lights);
+            write_pixel(&mut file, x, y, WIDTH, HEIGHT, &world);
         }
     }
 }
 
 fn main() {
     println!("Saving image");
-    let spheres = make_spheres();
-    let lights = make_lights();
-    write_image("image.ppm", &spheres, &lights);
+    let world = make_world();
+    write_image("image.ppm", &world);
 }
