@@ -111,14 +111,6 @@ func findSingleIntersection(start Vec3d, direction Vec3d, sphere Sphere) Interse
 	return intersection
 }
 
-func fold[Source, Target any](collection []Source, f func(Source, Target) Target, init Target) Target {
-	result := init
-	for _, x := range collection {
-		result = f(x, result)
-	}
-	return result
-}
-
 func findIntersection(start Vec3d, direction Vec3d, spheres []Sphere) Intersection {
 	i1 := makeIntersection()
 	for _, sphere := range spheres {
@@ -126,14 +118,6 @@ func findIntersection(start Vec3d, direction Vec3d, spheres []Sphere) Intersecti
 		i1 = closestIntersection(i1, i2)
 	}
 	return i1
-}
-
-func findIntersectionFold(start Vec3d, direction Vec3d, spheres []Sphere) Intersection {
-	closest := func(s Sphere, i1 Intersection) Intersection {
-		i2 := findSingleIntersection(start, direction, s)
-		return closestIntersection(i1, i2)
-	}
-	return fold(spheres, closest, makeIntersection())
 }
 
 func shadeSingleLight(intersection Intersection, light Light) Vec3d {
@@ -154,16 +138,6 @@ func shade(intersection Intersection, lights []Light) Vec3d {
 		color = add(color, shadeSingleLight(intersection, light))
 	}
 	return color
-}
-
-func shadeFold(intersection Intersection, lights []Light) Vec3d {
-	if math.IsInf(intersection.distance, 1) {
-		return Vec3d{1, 1, 1}
-	}
-	addLight := func(light Light, color Vec3d) Vec3d {
-		return add(shadeSingleLight(intersection, light), color)
-	}
-	return fold(lights, addLight, shadeAtmosphere(intersection))
 }
 
 func colorU8fromF64(c float64) uint8 {

@@ -120,16 +120,6 @@ fn find_intersection(
     return i1;
 }
 
-fn find_intersection_fold(
-    start: Vec3d, direction: Vec3d, spheres: &Vec<Sphere>
-) -> Intersection{
-    let closest = |i1: Intersection, sphere: &Sphere| -> Intersection {
-        let i2 = find_single_intersection(start, direction, *sphere);
-        closest_intersection(i1, i2)
-    };
-    spheres.iter().fold(make_intersection(), closest)
-}
-
 fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
     let geometry = 0.0_f64.max(-dot(light.direction, intersection.normal));
     muls(geometry, mul(intersection.color, light.color))
@@ -148,16 +138,6 @@ fn shade(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
         color = add(color, shade_single_light(intersection, *light));
     }
     return color;
-}
-
-fn shade_fold(intersection: Intersection, lights: &Vec<Light>) -> Vec3d {
-    if intersection.distance.is_infinite() {
-        return [1., 1., 1.];
-    }
-    let add_light = |color: Vec3d, light: &Light| -> Vec3d {
-        add(color, shade_single_light(intersection, *light))
-    };
-    return lights.iter().fold(shade_atmosphere(intersection), add_light);
 }
 
 fn color_u8_from_f64(c: f64) -> u8 {
