@@ -72,13 +72,6 @@ func makeIntersection() Intersection {
 	return Intersection{distance: math.Inf(1)}
 }
 
-func closestIntersection(a, b Intersection) Intersection {
-	if a.distance < b.distance {
-		return a
-	}
-	return b
-}
-
 func makeWorld() World {
 	R := 100000.0
 	MAX_C := 1.0
@@ -121,7 +114,9 @@ func findIntersection(start Vec3d, direction Vec3d, spheres []Sphere) Intersecti
 	i1 := makeIntersection()
 	for _, sphere := range spheres {
 		i2 := findSingleIntersection(start, direction, sphere)
-		i1 = closestIntersection(i1, i2)
+		if i2.distance < i1.distance {
+			i1 = i2
+		}
 	}
 	return i1
 }
