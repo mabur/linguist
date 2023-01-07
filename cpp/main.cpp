@@ -67,10 +67,6 @@ struct Intersection {
     Vec3d color = {};
 };
 
-bool operator<(Intersection a, Intersection b) {
-    return a.distance < b.distance;
-}
-
 World makeWorld() {
     const auto R = 100000.0;
     const auto MAX_C = 1.0;
@@ -114,11 +110,14 @@ Intersection findSingleIntersection(
 Intersection findIntersection(
     Vec3d start, Vec3d direction, const std::vector<Sphere>& spheres
 ) {
-    auto intersection = Intersection{};
+    auto i1 = Intersection{};
     for (const auto& sphere : spheres) {
-        intersection = std::min(intersection, findSingleIntersection(start, direction, sphere));
+        const auto i2 = findSingleIntersection(start, direction, sphere);
+        if (i2.distance < i1.distance) {
+            i1 = i2;
+        }
     }
-    return intersection;
+    return i1;
 }
 
 Vec3d shadeSingleLight(Intersection intersection, Light light) {
