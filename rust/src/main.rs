@@ -4,35 +4,35 @@ use std::io::prelude::*;
 
 type Vec3d = [f64; 3];
 
-fn add(a: &Vec3d, b: &Vec3d) -> Vec3d {
+fn add(a: Vec3d, b: Vec3d) -> Vec3d {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-fn sub(a: &Vec3d, b: &Vec3d) -> Vec3d {
+fn sub(a: Vec3d, b: Vec3d) -> Vec3d {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-fn mul(a: &Vec3d, b: &Vec3d) -> Vec3d {
+fn mul(a: Vec3d, b: Vec3d) -> Vec3d {
     [a[0] * b[0], a[1] * b[1], a[2] * b[2]]
 }
 
-fn muls(a: f64, b: &Vec3d) -> Vec3d {
+fn muls(a: f64, b: Vec3d) -> Vec3d {
     [a * b[0], a * b[1], a * b[2]]
 }
 
-fn dot(a: &Vec3d, b: &Vec3d) -> f64 {
+fn dot(a: Vec3d, b: Vec3d) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-fn squared_norm(v: &Vec3d) -> f64 {
+fn squared_norm(v: Vec3d) -> f64 {
     dot(v, v)
 }
 
-fn norm(v: &Vec3d) -> f64 {
+fn norm(v: Vec3d) -> f64 {
     squared_norm(v).sqrt()
 }
 
-fn normalize(v: &Vec3d) -> Vec3d {
+fn normalize(v: Vec3d) -> Vec3d {
     muls(1.0 / norm(v), v)
 }
 
@@ -82,33 +82,33 @@ fn make_spheres() -> Vec<Sphere> {
 
 fn make_lights() -> Vec<Light> {
     vec![
-        Light{direction:[1., 1., 2.], color:muls(0.4, &[1.0,0.8,0.5])},
-        Light{direction:[-1., -1., -2.], color:muls(0.4, &[0.5,0.5,1.0])},
+        Light{direction:[1., 1., 2.], color:muls(0.4, [1.0,0.8,0.5])},
+        Light{direction:[-1., -1., -2.], color:muls(0.4, [0.5,0.5,1.0])},
     ]
 }
 
 fn find_single_intersection(
-    start: &Vec3d, direction: &Vec3d, sphere: &Sphere
+    start: Vec3d, direction: Vec3d, sphere: &Sphere
 ) -> Intersection {
-    let offset = sub(&sphere.position, start);
-    let c = dot(direction, &offset);
+    let offset = sub(sphere.position, start);
+    let c = dot(direction, offset);
     if c < 0.0 {
         return make_intersection()
     };
-    let discriminant = c * c - squared_norm(&offset) + sphere.squared_radius;
+    let discriminant = c * c - squared_norm(offset) + sphere.squared_radius;
     if discriminant < 0.0 {
         return make_intersection()
     } 
     let mut intersection = make_intersection();
     intersection.distance = c - discriminant.sqrt();
-    intersection.position = add(&start, &muls(intersection.distance, &direction));
-    intersection.normal = normalize(&sub(&intersection.position, &sphere.position));
+    intersection.position = add(start, muls(intersection.distance, direction));
+    intersection.normal = normalize(sub(intersection.position, sphere.position));
     intersection.color = sphere.color;
     return intersection;
 }
 
 fn find_intersection(
-    start: &Vec3d, direction: &Vec3d, spheres: &Vec<Sphere>
+    start: Vec3d, direction: Vec3d, spheres: &Vec<Sphere>
 ) -> Intersection{
     let mut intersection = make_intersection();
     for sphere in spheres.iter() {
@@ -119,12 +119,12 @@ fn find_intersection(
 }
 
 fn shade_single_light(intersection: &Intersection, light: &Light) -> Vec3d{
-    let geometry = 0.0_f64.max(-dot(&light.direction, &intersection.normal));
-    return muls(geometry, &mul(&intersection.color, &light.color));
+    let geometry = 0.0_f64.max(-dot(light.direction, intersection.normal));
+    return muls(geometry, mul(intersection.color, light.color));
 }
 
 fn shade_atmosphere(intersection: &Intersection) -> Vec3d{
-    return muls(intersection.position[2].sqrt() * 0.3, &[0.5, 0.5, 1.0]);
+    return muls(intersection.position[2].sqrt() * 0.3, [0.5, 0.5, 1.0]);
 }
 
 fn shade(intersection: &Intersection, lights: &Vec<Light>) -> Vec3d {
@@ -133,7 +133,7 @@ fn shade(intersection: &Intersection, lights: &Vec<Light>) -> Vec3d {
     }
     let mut color = shade_atmosphere(intersection);
     for light in lights.iter() {
-        color = add(&color, &shade_single_light(intersection, light));
+        color = add(color, shade_single_light(intersection, light));
     }
     return color;
 }
@@ -154,8 +154,8 @@ fn write_image(file_path: &str, spheres: &Vec<Sphere>, lights: &Vec<Light>) -> R
             let xd = (x - width / 2) as f64;
             let yd = (y - height / 2) as f64;
             let zd = (focal_length) as f64;
-            let direction = normalize(&[xd, yd, zd]);
-            let intersection = find_intersection(&start, &direction, &spheres);
+            let direction = normalize([xd, yd, zd]);
+            let intersection = find_intersection(start, direction, &spheres);
             let color = shade(&intersection, &lights);
             let r = color_u8_from_f64(color[0]);
             let g = color_u8_from_f64(color[1]);
