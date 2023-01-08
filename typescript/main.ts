@@ -32,12 +32,12 @@ function dot(a: Vec3d, b: Vec3d) : number {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-function squared_norm(v: Vec3d) : number {
+function squaredNorm(v: Vec3d) : number {
     return dot(v, v);
 }
 
 function norm(v: Vec3d) : number {
-    return Math.sqrt(squared_norm(v));
+    return Math.sqrt(squaredNorm(v));
 }
 
 function normalize(v: Vec3d) : Vec3d {
@@ -68,7 +68,7 @@ interface Intersection {
     color: Vec3d;
 }
 
-function make_intersection() : Intersection {
+function makeIntersection() : Intersection {
     return {
         position: zero3d(),
         normal: zero3d(),
@@ -77,8 +77,7 @@ function make_intersection() : Intersection {
     }
 }
 
-
-function make_world() : World {
+function makeWorld() : World {
     const R = 100000.0;
     const MAX_C = 1.0;
     const MIN_C = 0.1;
@@ -97,16 +96,16 @@ function make_world() : World {
     return {spheres:spheres, lights:lights, atmosphere_color:atmosphere_color};
 }
 
-function find_single_intersection(
+function findSingleIntersection(
     start: Vec3d, direction: Vec3d, sphere: Sphere
 ) : Intersection {
-    const intersection = make_intersection();
+    const intersection = makeIntersection();
     const offset = sub(sphere.position, start);
     const c = dot(direction, offset);
     if (c < 0.0) {
         return intersection;
     }
-    const discriminant = c * c - squared_norm(offset) + sphere.squared_radius;
+    const discriminant = c * c - squaredNorm(offset) + sphere.squared_radius;
     if (discriminant < 0.0) {
         return intersection;
     } 
@@ -117,12 +116,12 @@ function find_single_intersection(
     return intersection;
 }
 
-function find_intersection(
+function findIntersection(
     start: Vec3d, direction: Vec3d, spheres: Array<Sphere>
 ) : Intersection {
-    let i1 = make_intersection();
+    let i1 = makeIntersection();
     for (const sphere of spheres) {
-        const i2 = find_single_intersection(start, direction, sphere);
+        const i2 = findSingleIntersection(start, direction, sphere);
         if (i2.distance < i1.distance) {
             i1 = i2;
         }
@@ -130,12 +129,12 @@ function find_intersection(
     return i1;
 }
 
-function shade_single_light(intersection: Intersection, light: Light) : Vec3d{
+function shadeSingleLight(intersection: Intersection, light: Light) : Vec3d{
     const geometry = Math.max(0.0, -dot(light.direction, intersection.normal));
     return muls(geometry, mul(intersection.color, light.color));
 }
 
-function shade_atmosphere(intersection: Intersection, atmosphere_color: Vec3d) : Vec3d{
+function shadeAtmosphere(intersection: Intersection, atmosphere_color: Vec3d) : Vec3d{
     return muls(Math.sqrt(intersection.position.z), atmosphere_color);
 }
 
@@ -143,18 +142,18 @@ function shade(intersection: Intersection, world: World) : Vec3d {
     if (intersection.distance == Infinity) {
         return vec3d(1, 1, 1);
     }
-    let color = shade_atmosphere(intersection, world.atmosphere_color);
+    let color = shadeAtmosphere(intersection, world.atmosphere_color);
     for (const light of world.lights) {
-        color = add(color, shade_single_light(intersection, light));
+        color = add(color, shadeSingleLight(intersection, light));
     }
     return color;
 }
 
-function color_u8_from_number(c: number) : number {
+function colorU8fromF64(c: number) : number {
     return Math.trunc(Math.min(255.0 * c, 255.0));
 }
 
-function serialize_pixel(
+function serializePixel(
     x: number,
     y: number,
     width: number,
@@ -166,27 +165,27 @@ function serialize_pixel(
     const yd = y - height / 2;
     const zd = height / 2;
     const direction = normalize(vec3d(xd, yd, zd));
-    const intersection = find_intersection(start, direction, world.spheres);
+    const intersection = findIntersection(start, direction, world.spheres);
     const color = shade(intersection, world);
-    const r = color_u8_from_number(color.x);
-    const g = color_u8_from_number(color.y);
-    const b = color_u8_from_number(color.z);
+    const r = colorU8fromF64(color.x);
+    const g = colorU8fromF64(color.y);
+    const b = colorU8fromF64(color.z);
     return `${r} ${g} ${b} `
 }
 
-function serialize_image(world: World) : string {
+function serializeImage(world: World) : string {
     const WIDTH = 800;
     const HEIGHT = 600;
     let s = `P3\n${WIDTH}\n${HEIGHT}\n255\n`
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
-            s += serialize_pixel(x, y, WIDTH, HEIGHT, world);
+            s += serializePixel(x, y, WIDTH, HEIGHT, world);
         }
     }
     return s;
 }
 
 console.log("Saving image");
-const world = make_world();
-const image = serialize_image(world);
+const world = makeWorld();
+const image = serializeImage(world);
 await Deno.writeTextFile("image.ppm", image);
