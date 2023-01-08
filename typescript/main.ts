@@ -88,12 +88,12 @@ function make_world() : World {
 function find_single_intersection(
     start: Vec3d, direction: Vec3d, sphere: Sphere
 ) : Intersection {
-    let intersection = new Intersection();
+    const intersection = new Intersection();
     const offset = sub(sphere.position, start);
     const c = dot(direction, offset);
     if (c < 0.0) {
         return intersection;
-    };
+    }
     const discriminant = c * c - squared_norm(offset) + sphere.squared_radius;
     if (discriminant < 0.0) {
         return intersection;
@@ -119,7 +119,7 @@ function find_intersection(
 }
 
 function shade_single_light(intersection: Intersection, light: Light) : Vec3d{
-    let geometry = Math.max(0.0, -dot(light.direction, intersection.normal));
+    const geometry = Math.max(0.0, -dot(light.direction, intersection.normal));
     return muls(geometry, mul(intersection.color, light.color));
 }
 
@@ -165,7 +165,7 @@ function serialize_pixel(
 function serialize_image(world: World) : string {
     const WIDTH = 800;
     const HEIGHT = 600;
-    let s = "P3\n" + WIDTH.toString() + "\n" + HEIGHT.toString() + "\n255\n"
+    let s = "P3\n" + WIDTH.toString() + "\n" + HEIGHT.toString() + "\n255\n";
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
             s += serialize_pixel(x, y, WIDTH, HEIGHT, world);
