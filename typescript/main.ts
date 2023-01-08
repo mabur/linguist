@@ -163,8 +163,8 @@ function serialize_pixel(
 }
 
 function serialize_image(world: World) : string {
-    const WIDTH = 64;
-    const HEIGHT = 48;
+    const WIDTH = 800;
+    const HEIGHT = 600;
     let s = "P3\n" + WIDTH.toString() + "\n" + HEIGHT.toString() + "\n255\n"
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
