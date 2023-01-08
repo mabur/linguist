@@ -6,6 +6,6 @@ This repository implements the same example program in multiple programming lang
 * Rust
 * TypeScript
 
-The example program is a minimal raytracer that generates an image in the simple file format ppm.
+The example program is a minimal raytracer that generates an image in the simple file format ppm:
 
 ![](https://github.com/mabur/linguist/blob/main/image.png)
