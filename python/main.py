@@ -109,12 +109,10 @@ def findSingleIntersection(start: Vec3d, direction: Vec3d, sphere: Sphere) -> In
 
 
 def findIntersection(start: Vec3d, direction: Vec3d, spheres: Iterable[Sphere]) -> Intersection:
-    i1 = Intersection()
-    for sphere in spheres:
-        i2 = findSingleIntersection(start, direction, sphere)
-        if i2.distance < i1.distance:
-            i1 = i2
-    return i1
+    return min(
+        (findSingleIntersection(start, direction, sphere) for sphere in spheres),
+        key=lambda i: i.distance
+    )
 
 
 def shadeSingleLight(intersection: Intersection, light: Light) -> Vec3d:
