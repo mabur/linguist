@@ -2,7 +2,6 @@ import math
 from dataclasses import dataclass
 from typing import Iterable
 
-
 @dataclass
 class Vec3d:
     x: float
@@ -135,7 +134,7 @@ def colorU8fromF64(c: float) -> int:
     return int(min(255.0 * c, 255.0))
 
 
-def writePixel(file, x: int, y: int, width: int, height: int, world: World) -> None:
+def serializePixel(x: int, y: int, width: int, height: int, world: World) -> str:
     start = Vec3d(0, 0, 0)
     xd = x - width / 2.0
     yd = y - height / 2.0
@@ -146,7 +145,7 @@ def writePixel(file, x: int, y: int, width: int, height: int, world: World) -> N
     r = colorU8fromF64(color.x)
     g = colorU8fromF64(color.y)
     b = colorU8fromF64(color.z)
-    file.write("{} {} {} ".format(r, g, b))
+    return "{} {} {} ".format(r, g, b)
 
 
 def writeImage(file_path: str, world: World) -> None:
@@ -154,9 +153,12 @@ def writeImage(file_path: str, world: World) -> None:
     HEIGHT = 600
     with open(file_path, 'w') as file:
         file.write("{}\n{}\n{}\n{}\n".format("P3", WIDTH, HEIGHT, 255))
-        for y in range(HEIGHT):
-            for x in range(WIDTH):
-                writePixel(file, x, y, WIDTH, HEIGHT, world)
+        file.write(
+            " ".join(
+                serializePixel(x, y, WIDTH, HEIGHT, world)
+                for y in range(HEIGHT) for x in range(WIDTH)
+            )
+        )
 
 
 def main():
