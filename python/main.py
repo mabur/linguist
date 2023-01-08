@@ -130,8 +130,8 @@ def writePixel(file, x: int, y: int, width: int, height: int, world: World) -> N
     file.write("{} {} {} ".format(r, g, b))
 
 def writeImage(file_path: str, world: World) -> None:
-    WIDTH = 320
-    HEIGHT = 240
+    WIDTH = 800
+    HEIGHT = 600
     with open(file_path, 'w') as file:
         file.write("{}\n{}\n{}\n{}\n".format("P3", WIDTH, HEIGHT, 255))
         for y in range(HEIGHT):
