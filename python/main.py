@@ -128,9 +128,7 @@ def shade(intersection: Intersection, world: World) -> Vec3d:
     if math.isinf(intersection.distance):
         return Vec3d(1, 1, 1)
     color = shadeAtmosphere(intersection, world.atmosphere_color)
-    for light in world.lights:
-        color = color + shadeSingleLight(intersection, light)
-    return color
+    return sum((shadeSingleLight(intersection, light) for light in world.lights), color)
 
 
 def colorU8fromF64(c: float) -> int:
