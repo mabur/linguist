@@ -159,13 +159,13 @@ function serialize_pixel(
     const r = color_u8_from_number(color.x);
     const g = color_u8_from_number(color.y);
     const b = color_u8_from_number(color.z);
-    return r.toString() + " " + g.toString() + " " + b.toString() + " ";
+    return `${r} ${g} ${b} `
 }
 
 function serialize_image(world: World) : string {
     const WIDTH = 800;
     const HEIGHT = 600;
-    let s = "P3\n" + WIDTH.toString() + "\n" + HEIGHT.toString() + "\n255\n";
+    let s = `P3\n${WIDTH}\n${HEIGHT}\n255\n`
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
             s += serialize_pixel(x, y, WIDTH, HEIGHT, world);
@@ -174,8 +174,11 @@ function serialize_image(world: World) : string {
     return s;
 }
 
+const t0 = performance.now();
 console.log("Saving image");
 const world = make_world();
 const image = serialize_image(world);
 await Deno.writeTextFile("image.ppm", image);
 console.log("Done");
+const t1 = performance.now();
+console.log(t1 - t0);
