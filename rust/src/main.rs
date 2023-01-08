@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::BufWriter;
 use std::io::prelude::*;
 
 type Vec3d = [f64; 3];
@@ -148,7 +149,7 @@ fn color_u8_from_f64(c: f64) -> u8 {
 }
 
 fn write_pixel(
-    file: &mut File,
+    writer: &mut BufWriter<File>,
     x: i32,
     y: i32,
     width: i32,
@@ -165,17 +166,18 @@ fn write_pixel(
     let r = color_u8_from_f64(color[0]);
     let g = color_u8_from_f64(color[1]);
     let b = color_u8_from_f64(color[2]);
-    write!(file, "{} {} {} ", r, g, b).unwrap();
+    write!(writer, "{} {} {} ", r, g, b).unwrap();
 }
 
 fn write_image(file_path: &str, world: &World) {
-    let mut file = File::create(file_path).unwrap();
+    let file = File::create(file_path).unwrap();
+    let mut writer = BufWriter::new(file);
     const WIDTH: i32 = 800;
     const HEIGHT: i32 = 600;
-    write!(file, "{}\n{}\n{}\n{}\n", "P3", WIDTH, HEIGHT, 255).unwrap();
+    write!(writer, "{}\n{}\n{}\n{}\n", "P3", WIDTH, HEIGHT, 255).unwrap();
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
-            write_pixel(&mut file, x, y, WIDTH, HEIGHT, &world);
+            write_pixel(&mut writer, x, y, WIDTH, HEIGHT, &world);
         }
     }
 }
