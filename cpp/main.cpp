@@ -129,7 +129,7 @@ Vec3d shadeAtmosphere(Intersection intersection, Vec3d atmosphere_color) {
     return sqrt(intersection.position.z) * atmosphere_color;
 }
 
-Vec3d shade(Intersection intersection, World world) {
+Vec3d shade(Intersection intersection, const World& world) {
     if (isinf(intersection.distance)) {
         return Vec3d{ 1, 1, 1 };
     }
