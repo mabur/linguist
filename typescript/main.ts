@@ -174,11 +174,7 @@ function serialize_image(world: World) : string {
     return s;
 }
 
-const t0 = performance.now();
 console.log("Saving image");
 const world = make_world();
 const image = serialize_image(world);
 await Deno.writeTextFile("image.ppm", image);
-console.log("Done");
-const t1 = performance.now();
-console.log(t1 - t0);
