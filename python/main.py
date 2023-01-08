@@ -154,7 +154,7 @@ def writeImage(file_path: str, world: World) -> None:
     with open(file_path, 'w') as file:
         file.write("{}\n{}\n{}\n{}\n".format("P3", WIDTH, HEIGHT, 255))
         file.write(
-            " ".join(
+            "".join(
                 serializePixel(x, y, WIDTH, HEIGHT, world)
                 for y in range(HEIGHT) for x in range(WIDTH)
             )
