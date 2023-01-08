@@ -1,27 +1,61 @@
 use std::fs::File;
 use std::io::BufWriter;
 use std::io::prelude::*;
+use std::ops;
 
-type Vec3d = [f64; 3];
-
-fn add(a: Vec3d, b: Vec3d) -> Vec3d {
-    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+#[derive(Copy, Clone)]
+struct Vec3d {
+    x: f64,
+    y: f64,
+    z: f64,
 }
 
-fn sub(a: Vec3d, b: Vec3d) -> Vec3d {
-    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+impl Vec3d {
+    fn new(x: f64, y:f64, z:f64) -> Vec3d {
+        Vec3d{x:x, y:y, z:z}
+    }
+    fn zero() -> Vec3d {
+        Vec3d{x:0.0, y:0.0, z:0.0}
+    }
 }
 
-fn mul(a: Vec3d, b: Vec3d) -> Vec3d {
-    [a[0] * b[0], a[1] * b[1], a[2] * b[2]]
+impl ops::Add<Vec3d> for Vec3d {
+    type Output = Vec3d;
+    fn add(self, right: Vec3d) -> Vec3d {
+        Vec3d::new(self.x + right.x, self.y + right.y, self.z + right.z)
+    }
 }
 
-fn muls(a: f64, b: Vec3d) -> Vec3d {
-    [a * b[0], a * b[1], a * b[2]]
+impl ops::Sub<Vec3d> for Vec3d {
+    type Output = Vec3d;
+    fn sub(self, right: Vec3d) -> Vec3d {
+        Vec3d::new(self.x - right.x, self.y - right.y, self.z - right.z)
+    }
+}
+
+impl ops::Div<Vec3d> for Vec3d {
+    type Output = Vec3d;
+    fn div(self, right: Vec3d) -> Vec3d {
+        Vec3d::new(self.x / right.x, self.y / right.y, self.z / right.z)
+    }
+}
+
+impl ops::Mul<Vec3d> for Vec3d {
+    type Output = Vec3d;
+    fn mul(self, right: Vec3d) -> Vec3d {
+        Vec3d::new(self.x * right.x, self.y * right.y, self.z * right.z)
+    }
+}
+
+impl ops::Mul<Vec3d> for f64 {
+    type Output = Vec3d;
+    fn mul(self, right: Vec3d) -> Vec3d {
+        Vec3d::new(self * right.x, self * right.y, self * right.z)
+    }
 }
 
 fn dot(a: Vec3d, b: Vec3d) -> f64 {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+    a.x * b.x + a.y * b.y + a.z * b.z
 }
 
 fn squared_norm(v: Vec3d) -> f64 {
@@ -33,7 +67,7 @@ fn norm(v: Vec3d) -> f64 {
 }
 
 fn normalize(v: Vec3d) -> Vec3d {
-    muls(1.0 / norm(v), v)
+    (1.0 / norm(v)) * v
 }
 
 #[derive(Copy, Clone)]
@@ -65,10 +99,10 @@ struct Intersection {
 
 fn make_intersection() -> Intersection {
     Intersection{
-        position: [0.0, 0.0, 0.0],
-        normal: [0.0, 0.0, 0.0],
+        position: Vec3d::zero(),
+        normal: Vec3d::zero(),
         distance: f64::INFINITY,
-        color: [0.0, 0.0, 0.0],
+        color: Vec3d::zero(),
     }
 }
 
@@ -77,17 +111,17 @@ fn make_world() -> World {
     const MAX_C: f64 = 1.0;
     const MIN_C: f64 = 0.1;
     let spheres = vec![
-        Sphere{position:[-2., 0., 6.], squared_radius:1., color: [MAX_C, MAX_C, MIN_C]},
-        Sphere{position:[0., 0., 5.], squared_radius:1., color: [MAX_C, MIN_C, MIN_C]},
-        Sphere{position:[2., 0., 4.], squared_radius:1., color: [2.0*MIN_C, 4.0*MIN_C, MAX_C]},
-        Sphere{position:[0., 1.+R, 0.], squared_radius:R*R, color: [MIN_C, MAX_C, MIN_C]},
-        Sphere{position:[0., -1.-R, 0.], squared_radius:R*R, color: [MAX_C, MAX_C, MAX_C]},
+        Sphere{position:Vec3d::new(-2., 0., 6.), squared_radius:1., color: Vec3d::new(MAX_C, MAX_C, MIN_C)},
+        Sphere{position:Vec3d::new(0., 0., 5.), squared_radius:1., color: Vec3d::new(MAX_C, MIN_C, MIN_C)},
+        Sphere{position:Vec3d::new(2., 0., 4.), squared_radius:1., color: Vec3d::new(2.0*MIN_C, 4.0*MIN_C, MAX_C)},
+        Sphere{position:Vec3d::new(0., 1.+R, 0.), squared_radius:R*R, color: Vec3d::new(MIN_C, MAX_C, MIN_C)},
+        Sphere{position:Vec3d::new(0., -1.-R, 0.), squared_radius:R*R, color: Vec3d::new(MAX_C, MAX_C, MAX_C)},
     ];
     let lights = vec![
-        Light{direction:[1., 1., 2.], color:muls(0.4, [1.0,0.8,0.5])},
-        Light{direction:[-1., -1., -2.], color:muls(0.4, [0.5,0.5,1.0])},
+        Light{direction:Vec3d::new(1., 1., 2.), color:0.4 * Vec3d::new(1.0,0.8,0.5)},
+        Light{direction:Vec3d::new(-1., -1., -2.), color:0.4 * Vec3d::new(0.5,0.5,1.0)},
     ];
-    let atmosphere_color = muls(0.3, [0.5, 0.5, 1.0]);
+    let atmosphere_color = 0.3 * Vec3d::new(0.5, 0.5, 1.0);
     return World{spheres, lights, atmosphere_color};
 }
 
@@ -95,7 +129,7 @@ fn find_single_intersection(
     start: Vec3d, direction: Vec3d, sphere: Sphere
 ) -> Intersection {
     let mut intersection = make_intersection();
-    let offset = sub(sphere.position, start);
+    let offset = sphere.position - start;
     let c = dot(direction, offset);
     if c < 0.0 {
         return intersection
@@ -105,8 +139,8 @@ fn find_single_intersection(
         return intersection
     } 
     intersection.distance = c - discriminant.sqrt();
-    intersection.position = add(start, muls(intersection.distance, direction));
-    intersection.normal = normalize(sub(intersection.position, sphere.position));
+    intersection.position = start + intersection.distance * direction;
+    intersection.normal = normalize(intersection.position - sphere.position);
     intersection.color = sphere.color;
     return intersection;
 }
@@ -126,20 +160,20 @@ fn find_intersection(
 
 fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
     let geometry = 0.0_f64.max(-dot(light.direction, intersection.normal));
-    muls(geometry, mul(intersection.color, light.color))
+    return geometry * (intersection.color * light.color)
 }
 
 fn shade_atmosphere(intersection: Intersection, atmosphere_color: Vec3d) -> Vec3d{
-    muls(intersection.position[2].sqrt(), atmosphere_color)
+    intersection.position.z.sqrt() * atmosphere_color
 }
 
 fn shade(intersection: Intersection, world: &World) -> Vec3d {
     if intersection.distance.is_infinite() {
-        return [1., 1., 1.];
+        return Vec3d::new(1., 1., 1.);
     }
     let mut color = shade_atmosphere(intersection, world.atmosphere_color);
     for light in world.lights.iter() {
-        color = add(color, shade_single_light(intersection, *light));
+        color = color + shade_single_light(intersection, *light);
     }
     return color;
 }
@@ -156,16 +190,16 @@ fn write_pixel(
     height: i32,
     world: &World,
 ) {
-    let start = [0., 0., 0.];
+    let start = Vec3d::zero();
     let xd = (x - width / 2) as f64;
     let yd = (y - height / 2) as f64;
     let zd = (height / 2) as f64;
-    let direction = normalize([xd, yd, zd]);
+    let direction = normalize(Vec3d::new(xd, yd, zd));
     let intersection = find_intersection(start, direction, &world.spheres);
     let color = shade(intersection, &world);
-    let r = color_u8_from_f64(color[0]);
-    let g = color_u8_from_f64(color[1]);
-    let b = color_u8_from_f64(color[2]);
+    let r = color_u8_from_f64(color.x);
+    let g = color_u8_from_f64(color.y);
+    let b = color_u8_from_f64(color.z);
     write!(writer, "{} {} {} ", r, g, b).unwrap();
 }
 
