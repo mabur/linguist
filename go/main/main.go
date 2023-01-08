@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math"
 	"os"
@@ -145,7 +146,7 @@ func colorU8fromF64(c float64) uint8 {
 	return uint8(math.Min(255.0*c, 255.0))
 }
 
-func writePixel(file *os.File, x, y, width, height int, world World) {
+func writePixel(writer *bufio.Writer, x, y, width, height int, world World) {
 	start := Vec3d{0, 0, 0}
 	xd := float64(x - width/2)
 	yd := float64(y - height/2)
@@ -156,18 +157,20 @@ func writePixel(file *os.File, x, y, width, height int, world World) {
 	r := colorU8fromF64(color.x)
 	g := colorU8fromF64(color.y)
 	b := colorU8fromF64(color.z)
-	fmt.Fprintf(file, "%d %d %d ", r, g, b)
+	fmt.Fprintf(writer, "%d %d %d ", r, g, b)
 }
 
 func writeImage(file_path string, world World) {
 	file, _ := os.Create(file_path)
 	defer file.Close()
+	writer := bufio.NewWriter(file)
+	defer writer.Flush()
 	WIDTH := 800
 	HEIGHT := 600
-	fmt.Fprintf(file, "P3\n%d\n%d\n%d\n", WIDTH, HEIGHT, 255)
+	fmt.Fprintf(writer, "P3\n%d\n%d\n%d\n", WIDTH, HEIGHT, 255)
 	for y := 0; y < HEIGHT; y++ {
 		for x := 0; x < WIDTH; x++ {
-			writePixel(file, x, y, WIDTH, HEIGHT, world)
+			writePixel(writer, x, y, WIDTH, HEIGHT, world)
 		}
 	}
 }
