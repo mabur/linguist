@@ -1,53 +1,66 @@
-from dataclasses import dataclass
 import math
-from typing import List, Sequence
+from dataclasses import dataclass
+from typing import Iterable
+
 
 @dataclass
 class Vec3d:
-	x: float
-	y: float
-	z: float
+    x: float
+    y: float
+    z: float
+
 
 def add(a: Vec3d, b: Vec3d) -> Vec3d:
-	return Vec3d(a.x + b.x, a.y + b.y, a.z + b.z)
+    return Vec3d(a.x + b.x, a.y + b.y, a.z + b.z)
+
 
 def sub(a: Vec3d, b: Vec3d) -> Vec3d:
-	return Vec3d(a.x - b.x, a.y - b.y, a.z - b.z)
+    return Vec3d(a.x - b.x, a.y - b.y, a.z - b.z)
+
 
 def mul(a: Vec3d, b: Vec3d) -> Vec3d:
-	return Vec3d(a.x * b.x, a.y * b.y, a.z * b.z)
+    return Vec3d(a.x * b.x, a.y * b.y, a.z * b.z)
+
 
 def muls(a: float, b: Vec3d) -> Vec3d:
-	return Vec3d(a * b.x, a * b.y, a * b.z)
+    return Vec3d(a * b.x, a * b.y, a * b.z)
+
 
 def dot(a: Vec3d, b: Vec3d) -> float:
-	return a.x*b.x + a.y*b.y + a.z*b.z
+    return a.x * b.x + a.y * b.y + a.z * b.z
+
 
 def squaredNorm(v: Vec3d) -> float:
-	return dot(v, v)
+    return dot(v, v)
+
 
 def norm(v: Vec3d) -> float:
-	return math.sqrt(squaredNorm(v))
+    return math.sqrt(squaredNorm(v))
+
 
 def normalize(v: Vec3d) -> Vec3d:
-	return muls(1.0/norm(v), v)
+    return muls(1.0 / norm(v), v)
+
 
 @dataclass
 class Sphere:
-	position: Vec3d
-	squaredRadius: float
-	color: Vec3d
+    position: Vec3d
+    squaredRadius: float
+    color: Vec3d
+
 
 @dataclass
 class Light:
-	direction: Vec3d
-	color: Vec3d
+    direction: Vec3d
+    color: Vec3d
+
 
 @dataclass
 class World:
-	spheres: Sequence[Sphere]
-	lights: Sequence[Light]
-	atmosphere_color: Vec3d
+    spheres: Iterable[Sphere]
+    lights: Iterable[Light]
+    atmosphere_color: Vec3d
+
 
 @dataclass
 class Intersection:
@@ -55,6 +68,7 @@ class Intersection:
     normal: Vec3d = Vec3d(0, 0, 0)
     color: Vec3d = Vec3d(1, 1, 1)
     distance: float = math.inf
+
 
 def makeWorld() -> World:
     R = 100000.0
@@ -75,46 +89,53 @@ def makeWorld() -> World:
     world = World(spheres=spheres, lights=lights, atmosphere_color=atmosphere_color)
     return world
 
-def findSingleIntersection(start: Vec3d, direction: Vec3d, sphere: Sphere) -> Intersection:
-	intersection = Intersection()
-	offset = sub(sphere.position, start)
-	c = dot(direction, offset)
-	if c < 0.0:
-		return intersection
-	discriminant = c*c - squaredNorm(offset) + sphere.squaredRadius
-	if discriminant < 0.0:
-		return intersection
-	intersection.distance = c - math.sqrt(discriminant)
-	intersection.position = add(start, muls(intersection.distance, direction))
-	intersection.normal = normalize(sub(intersection.position, sphere.position))
-	intersection.color = sphere.color
-	return intersection
 
-def findIntersection(start: Vec3d, direction: Vec3d, spheres: Sequence[Sphere]) -> Intersection:
-	i1 = Intersection()
-	for sphere in spheres:
-		i2 = findSingleIntersection(start, direction, sphere)
-		if i2.distance < i1.distance:
-			i1 = i2
-	return i1
+def findSingleIntersection(start: Vec3d, direction: Vec3d, sphere: Sphere) -> Intersection:
+    intersection = Intersection()
+    offset = sub(sphere.position, start)
+    c = dot(direction, offset)
+    if c < 0.0:
+        return intersection
+    discriminant = c * c - squaredNorm(offset) + sphere.squaredRadius
+    if discriminant < 0.0:
+        return intersection
+    intersection.distance = c - math.sqrt(discriminant)
+    intersection.position = add(start, muls(intersection.distance, direction))
+    intersection.normal = normalize(sub(intersection.position, sphere.position))
+    intersection.color = sphere.color
+    return intersection
+
+
+def findIntersection(start: Vec3d, direction: Vec3d, spheres: Iterable[Sphere]) -> Intersection:
+    i1 = Intersection()
+    for sphere in spheres:
+        i2 = findSingleIntersection(start, direction, sphere)
+        if i2.distance < i1.distance:
+            i1 = i2
+    return i1
+
 
 def shadeSingleLight(intersection: Intersection, light: Light) -> Vec3d:
-	geometry = max(-dot(light.direction, intersection.normal), 0.0)
-	return muls(geometry, mul(intersection.color, light.color))
+    geometry = max(-dot(light.direction, intersection.normal), 0.0)
+    return muls(geometry, mul(intersection.color, light.color))
+
 
 def shadeAtmosphere(intersection: Intersection, atmosphere_color: Vec3d) -> Vec3d:
-	return muls(math.sqrt(intersection.position.z), atmosphere_color)
+    return muls(math.sqrt(intersection.position.z), atmosphere_color)
+
 
 def shade(intersection: Intersection, world: World) -> Vec3d:
-	if math.isinf(intersection.distance):
-		return Vec3d(1, 1, 1)
-	color = shadeAtmosphere(intersection, world.atmosphere_color)
-	for light in world.lights:
-		color = add(color, shadeSingleLight(intersection, light))
-	return color
+    if math.isinf(intersection.distance):
+        return Vec3d(1, 1, 1)
+    color = shadeAtmosphere(intersection, world.atmosphere_color)
+    for light in world.lights:
+        color = add(color, shadeSingleLight(intersection, light))
+    return color
+
 
 def colorU8fromF64(c: float) -> int:
-	return int(min(255.0 * c, 255.0))
+    return int(min(255.0 * c, 255.0))
+
 
 def writePixel(file, x: int, y: int, width: int, height: int, world: World) -> None:
     start = Vec3d(0, 0, 0)
@@ -129,6 +150,7 @@ def writePixel(file, x: int, y: int, width: int, height: int, world: World) -> N
     b = colorU8fromF64(color.z)
     file.write("{} {} {} ".format(r, g, b))
 
+
 def writeImage(file_path: str, world: World) -> None:
     WIDTH = 800
     HEIGHT = 600
@@ -138,10 +160,12 @@ def writeImage(file_path: str, world: World) -> None:
             for x in range(WIDTH):
                 writePixel(file, x, y, WIDTH, HEIGHT, world)
 
+
 def main():
-	print("Saving image")
-	world = makeWorld()
-	writeImage("image.ppm", world)
+    print("Saving image")
+    world = makeWorld()
+    writeImage("image.ppm", world)
+
 
 if __name__ == "__main__":
     main()
