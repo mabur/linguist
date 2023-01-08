@@ -1,12 +1,15 @@
-
-class Vec3d {
-    x: number = 0;
-    y: number = 0;
-    z: number = 0;
+interface Vec3d {
+    x: number;
+    y: number;
+    z: number;
 }
 
 function vec3d(x: number, y: number, z: number) : Vec3d {
     return {x: x, y:y, z: z};
+}
+
+function zero3d() : Vec3d {
+    return {x: 0, y:0, z: 0};
 }
 
 function add(a: Vec3d, b: Vec3d) : Vec3d {
@@ -41,28 +44,37 @@ function normalize(v: Vec3d) : Vec3d {
     return muls((1.0 / norm(v)), v);
 }
 
-class Sphere {
-    position: Vec3d = new Vec3d();
-    squared_radius: number = 0;
-    color: Vec3d = new Vec3d();
+interface Sphere {
+    position: Vec3d;
+    squared_radius: number;
+    color: Vec3d;
 }
 
-class Light {
-    direction: Vec3d = new Vec3d();
-    color: Vec3d = new Vec3d();
+interface Light {
+    direction: Vec3d;
+    color: Vec3d;
 }
 
-class World {
-    spheres: Array<Sphere> = [];
-    lights: Array<Light> = [];
-    atmosphere_color: Vec3d =  new Vec3d();
+interface World {
+    spheres: Array<Sphere>;
+    lights: Array<Light>;
+    atmosphere_color: Vec3d;
 }
 
-class Intersection {
-    position: Vec3d = new Vec3d();
-    normal: Vec3d = new Vec3d();
-    distance: number = Infinity;
-    color: Vec3d = new Vec3d();
+interface Intersection {
+    position: Vec3d;
+    normal: Vec3d;
+    distance: number;
+    color: Vec3d;
+}
+
+function make_intersection() : Intersection {
+    return {
+        position: zero3d(),
+        normal: zero3d(),
+        distance: Infinity,
+        color: zero3d(),
+    }
 }
 
 
@@ -88,7 +100,7 @@ function make_world() : World {
 function find_single_intersection(
     start: Vec3d, direction: Vec3d, sphere: Sphere
 ) : Intersection {
-    const intersection = new Intersection();
+    const intersection = make_intersection();
     const offset = sub(sphere.position, start);
     const c = dot(direction, offset);
     if (c < 0.0) {
@@ -108,7 +120,7 @@ function find_single_intersection(
 function find_intersection(
     start: Vec3d, direction: Vec3d, spheres: Array<Sphere>
 ) : Intersection {
-    let i1 = new Intersection();
+    let i1 = make_intersection();
     for (const sphere of spheres) {
         const i2 = find_single_intersection(start, direction, sphere);
         if (i2.distance < i1.distance) {
@@ -149,7 +161,7 @@ function serialize_pixel(
     height: number,
     world: World,
 ) : string {
-    const start = new Vec3d();
+    const start = zero3d();
     const xd = x - width / 2;
     const yd = y - height / 2;
     const zd = height / 2;
