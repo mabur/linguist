@@ -32,13 +32,6 @@ impl ops::Sub<Vec3d> for Vec3d {
     }
 }
 
-impl ops::Div<Vec3d> for Vec3d {
-    type Output = Vec3d;
-    fn div(self, right: Vec3d) -> Vec3d {
-        vec3d(self.x / right.x, self.y / right.y, self.z / right.z)
-    }
-}
-
 impl ops::Mul<Vec3d> for Vec3d {
     type Output = Vec3d;
     fn mul(self, right: Vec3d) -> Vec3d {
