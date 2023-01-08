@@ -6,39 +6,39 @@ class Vec3d {
 }
 
 function vec3d(x: number, y: number, z: number) : Vec3d {
-    return {x: x, y:y, z: z}
+    return {x: x, y:y, z: z};
 }
 
 function add(a: Vec3d, b: Vec3d) : Vec3d {
-    return vec3d(a.x + b.x, a.y + b.y, a.z + b.z)
+    return vec3d(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
 function sub(a: Vec3d, b: Vec3d) : Vec3d {
-    return vec3d(a.x - b.x, a.y - b.y, a.z - b.z)
+    return vec3d(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
 function mul(a: Vec3d, b: Vec3d) : Vec3d {
-    return vec3d(a.x * b.x, a.y * b.y, a.z * b.z)
+    return vec3d(a.x * b.x, a.y * b.y, a.z * b.z);
 }
 
 function muls(a: number, b: Vec3d) : Vec3d {
-    return vec3d(a * b.x, a * b.y, a * b.z)
+    return vec3d(a * b.x, a * b.y, a * b.z);
 }
 
 function dot(a: Vec3d, b: Vec3d) : number {
-    return a.x * b.x + a.y * b.y + a.z * b.z
+    return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 function squared_norm(v: Vec3d) : number {
-    return dot(v, v)
+    return dot(v, v);
 }
 
 function norm(v: Vec3d) : number {
-    return Math.sqrt(squared_norm(v))
+    return Math.sqrt(squared_norm(v));
 }
 
 function normalize(v: Vec3d) : Vec3d {
-    return muls((1.0 / norm(v)), v)
+    return muls((1.0 / norm(v)), v);
 }
 
 class Sphere {
@@ -92,11 +92,11 @@ function find_single_intersection(
     const offset = sub(sphere.position, start);
     const c = dot(direction, offset);
     if (c < 0.0) {
-        return intersection
+        return intersection;
     };
     const discriminant = c * c - squared_norm(offset) + sphere.squared_radius;
     if (discriminant < 0.0) {
-        return intersection
+        return intersection;
     } 
     intersection.distance = c - Math.sqrt(discriminant);
     intersection.position = add(start, muls(intersection.distance, direction));
@@ -112,7 +112,7 @@ function find_intersection(
     for (const sphere of spheres) {
         const i2 = find_single_intersection(start, direction, sphere);
         if (i2.distance < i1.distance) {
-            i1 = i2
+            i1 = i2;
         }
     }
     return i1;
@@ -120,11 +120,11 @@ function find_intersection(
 
 function shade_single_light(intersection: Intersection, light: Light) : Vec3d{
     let geometry = Math.max(0.0, -dot(light.direction, intersection.normal));
-    return muls(geometry, mul(intersection.color, light.color))
+    return muls(geometry, mul(intersection.color, light.color));
 }
 
 function shade_atmosphere(intersection: Intersection, atmosphere_color: Vec3d) : Vec3d{
-    return muls(Math.sqrt(intersection.position.z), atmosphere_color)
+    return muls(Math.sqrt(intersection.position.z), atmosphere_color);
 }
 
 function shade(intersection: Intersection, world: World) : Vec3d {
@@ -139,7 +139,7 @@ function shade(intersection: Intersection, world: World) : Vec3d {
 }
 
 function color_u8_from_number(c: number) : number {
-    return Math.trunc(Math.min(255.0 * c, 255.0))
+    return Math.trunc(Math.min(255.0 * c, 255.0));
 }
 
 function serialize_pixel(
@@ -159,7 +159,7 @@ function serialize_pixel(
     const r = color_u8_from_number(color.x);
     const g = color_u8_from_number(color.y);
     const b = color_u8_from_number(color.z);
-    return r.toString() + " " + g.toString() + " " + b.toString() + " "
+    return r.toString() + " " + g.toString() + " " + b.toString() + " ";
 }
 
 function serialize_image(world: World) : string {
@@ -168,14 +168,14 @@ function serialize_image(world: World) : string {
     let s = "P3\n" + WIDTH.toString() + "\n" + HEIGHT.toString() + "\n255\n"
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
-            s += serialize_pixel(x, y, WIDTH, HEIGHT, world)
+            s += serialize_pixel(x, y, WIDTH, HEIGHT, world);
         }
     }
-    return s   
+    return s;
 }
 
-console.log("Saving image")
+console.log("Saving image");
 const world = make_world();
 const image = serialize_image(world);
 await Deno.writeTextFile("image.ppm", image);
-console.log("Done")
+console.log("Done");
