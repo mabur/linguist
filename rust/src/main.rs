@@ -140,14 +140,10 @@ fn find_single_intersection(
 fn find_intersection(
     start: Vec3d, direction: Vec3d, spheres: &Vec<Sphere>
 ) -> Intersection {
-    let mut i1 = make_intersection();
-    for sphere in spheres.iter() {
-        let i2 = find_single_intersection(start, direction, *sphere);
-        if i2.distance < i1.distance {
-            i1 = i2
-        }
-    }
-    return i1;
+    spheres.iter()
+        .map(|sphere| find_single_intersection(start, direction, *sphere))
+        .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap())
+        .unwrap()
 }
 
 fn shade_single_light(intersection: Intersection, light: Light) -> Vec3d{
@@ -163,11 +159,10 @@ fn shade(intersection: Intersection, world: &World) -> Vec3d {
     if intersection.distance.is_infinite() {
         return vec3d(1., 1., 1.);
     }
-    let mut color = shade_atmosphere(intersection, world.atmosphere_color);
-    for light in world.lights.iter() {
-        color = color + shade_single_light(intersection, *light);
-    }
-    return color;
+    let color = shade_atmosphere(intersection, world.atmosphere_color);
+    return world.lights.iter()
+        .map(|light| shade_single_light(intersection, *light))
+        .fold(color, |a, b| a + b)
 }
 
 fn color_u8_from_f64(c: f64) -> u8 {
