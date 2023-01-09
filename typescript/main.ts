@@ -173,11 +173,10 @@ function shade(intersection: Intersection, world: World): Vec3d {
   if (intersection.distance == Infinity) {
     return vec3d(1, 1, 1);
   }
-  let color = shadeAtmosphere(intersection, world.atmosphere_color);
-  for (const light of world.lights) {
-    color = add(color, shadeSingleLight(intersection, light));
-  }
-  return color;
+  return world.lights.reduce(
+    (color, light) => add(color, shadeSingleLight(intersection, light)),
+    shadeAtmosphere(intersection, world.atmosphere_color),
+  );
 }
 
 function colorU8fromF64(c: number): number {
