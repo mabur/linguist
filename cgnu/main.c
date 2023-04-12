@@ -5,6 +5,8 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+#define let __auto_type
+
 typedef struct {
     double x;
     double y;
@@ -74,12 +76,12 @@ Intersection makeIntersection() {
 }
 
 World makeWorld() {
-    const double R = 100000.0;
-    const double MAX_C = 1.0;
-    const double MIN_C = 0.1;
+    let R = 100000.0;
+    let MAX_C = 1.0;
+    let MIN_C = 0.1;
     World world;
 
-    int num_spheres = 5;
+    let num_spheres = 5;
     world.spheres_first = malloc(num_spheres * sizeof(Sphere));
     world.spheres_last = world.spheres_first + num_spheres;
     world.spheres_first[0] = (Sphere){(Vec3d){-2, 0, 6}, 1, (Vec3d){MAX_C, MAX_C, MIN_C}};
@@ -88,7 +90,7 @@ World makeWorld() {
     world.spheres_first[3] = (Sphere){(Vec3d){0, 1 + R, 0}, R * R, (Vec3d){MIN_C, MAX_C, MIN_C}};
     world.spheres_first[4] = (Sphere){(Vec3d){0, -1 - R, 0}, R * R, (Vec3d){MAX_C, MAX_C, MAX_C}};
 
-    int num_lights = 2;
+    let num_lights = 2;
     world.lights_first = malloc(num_lights * sizeof(Light));
     world.lights_last = world.lights_first + num_lights;
     world.lights_first[0] = (Light){(Vec3d){+1, +1, +2}, muls(0.4, (Vec3d){1, 0.8, 0.5})};
@@ -110,13 +112,13 @@ void freeWorld(World world) {
 Intersection findSingleIntersection(
     Vec3d start, Vec3d direction, Sphere sphere
 ) {
-    Intersection intersection = makeIntersection();
-    Vec3d offset = sub(sphere.position, start);
-    double c = dot(direction, offset);
+    let intersection = makeIntersection();
+    let offset = sub(sphere.position, start);
+    let c = dot(direction, offset);
     if (c < 0.0) {
         return intersection;
     }
-    double discriminant = c * c - squaredNorm(offset) + sphere.squaredRadius;
+    let discriminant = c * c - squaredNorm(offset) + sphere.squaredRadius;
     if (discriminant < 0.0) {
         return intersection;
     }
@@ -130,9 +132,9 @@ Intersection findSingleIntersection(
 Intersection findIntersection(
     Vec3d start, Vec3d direction, const Sphere* spheres_first, const Sphere* spheres_last
 ) {
-    Intersection i1 = makeIntersection();
-    for (const Sphere* s = spheres_first; s != spheres_last; ++s) {
-        Intersection i2 = findSingleIntersection(start, direction, *s);
+    let i1 = makeIntersection();
+    for (let s = spheres_first; s != spheres_last; ++s) {
+        let i2 = findSingleIntersection(start, direction, *s);
         if (i2.distance < i1.distance) {
             i1 = i2;
         }
@@ -141,7 +143,7 @@ Intersection findIntersection(
 }
 
 Vec3d shadeSingleLight(Intersection intersection, Light light) {
-    double geometry = MAX(-dot(light.direction, intersection.normal), 0.0);
+    let geometry = MAX(-dot(light.direction, intersection.normal), 0.0);
     return muls(geometry, mul(intersection.color, light.color));
 }
 
@@ -153,8 +155,8 @@ Vec3d shade(Intersection intersection, World world) {
     if (isinf(intersection.distance)) {
         return (Vec3d){ 1, 1, 1 };
     }
-    Vec3d color = shadeAtmosphere(intersection, world.atmosphere_color);
-    for (const Light* light = world.lights_first; light != world.lights_last; ++light) {
+    let color = shadeAtmosphere(intersection, world.atmosphere_color);
+    for (let light = world.lights_first; light != world.lights_last; ++light) {
         color = add(color, shadeSingleLight(intersection, *light));
     }
     return color;
@@ -172,30 +174,30 @@ void writePixel(
     int height,
     World world
 ) {
-    Vec3d start = (Vec3d){0, 0, 0};
-    double xd = (double)(x - width / 2);
-    double yd = (double)(y - height / 2);
-    double zd = (double)(height / 2);
-    Vec3d direction = normalize((Vec3d){xd, yd, zd});
-    Intersection intersection = findIntersection(start, direction, world.spheres_first, world.spheres_last);
-    Vec3d color = shade(intersection, world);
-    int r = colorU8fromF64(color.x);
-    int g = colorU8fromF64(color.y);
-    int b = colorU8fromF64(color.z);
+    let start = (Vec3d){0, 0, 0};
+    let xd = (double)(x - width / 2);
+    let yd = (double)(y - height / 2);
+    let zd = (double)(height / 2);
+    let direction = normalize((Vec3d){xd, yd, zd});
+    let intersection = findIntersection(start, direction, world.spheres_first, world.spheres_last);
+    let color = shade(intersection, world);
+    let r = colorU8fromF64(color.x);
+    let g = colorU8fromF64(color.y);
+    let b = colorU8fromF64(color.z);
     fprintf(file, "%d %d %d ", r, g, b);
 }
 
 void writeImage(const char* file_path, World world) {
-    FILE* file = fopen(file_path, "w");
+    let file = fopen(file_path, "w");
     if (file == NULL) {
         fprintf(stderr, "error opening file\n");
         exit(EXIT_FAILURE);
     }
-    const int WIDTH = 800;
-    const int HEIGHT = 600;
+    let WIDTH = 800;
+    let HEIGHT = 600;
     fprintf(file, "%s\n%d\n%d\n%d\n", "P3", WIDTH, HEIGHT, 255);
-    for (int y = 0; y < HEIGHT; ++y) {
-        for (int x = 0; x < WIDTH; ++x) {
+    for (let y = 0; y < HEIGHT; ++y) {
+        for (let x = 0; x < WIDTH; ++x) {
             writePixel(file, x, y, WIDTH, HEIGHT, world);
         }
     }
@@ -204,7 +206,7 @@ void writeImage(const char* file_path, World world) {
 
 int main() {
     printf("Saving image\n");
-    World world = makeWorld();
+    let world = makeWorld();
     writeImage("image.ppm", world);
     freeWorld(world);
     return 0;
