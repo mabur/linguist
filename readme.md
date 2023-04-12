@@ -1,5 +1,6 @@
 This repository compares different programming languages and their style and feel:
 * C
+* C with GNU extensions and macros
 * C++
 * Go
 * Python
