@@ -79,7 +79,7 @@ World makeWorld() {
     let R = 100000.0;
     let MAX_C = 1.0;
     let MIN_C = 0.1;
-    World world;
+    let world = (World){};
 
     let num_spheres = 5;
     world.spheres_first = malloc(num_spheres * sizeof(Sphere));
