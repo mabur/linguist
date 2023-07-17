@@ -57,10 +57,18 @@ typedef struct {
 } Light;
 
 typedef struct {
-    Sphere* spheres_first;
-    Sphere* spheres_last;
-    Light* lights_first;
-    Light* lights_last;
+    Sphere* first;
+    Sphere* last;    
+} Spheres;
+
+typedef struct {
+    Light* first;
+    Light* last;
+} Lights;
+
+typedef struct {
+    Spheres spheres;
+    Lights lights;
     Vec3d atmosphere_color;
 } World;
 
@@ -82,31 +90,31 @@ World makeWorld() {
     let world = (World){};
 
     let num_spheres = 5;
-    world.spheres_first = malloc(num_spheres * sizeof(Sphere));
-    world.spheres_last = world.spheres_first + num_spheres;
-    world.spheres_first[0] = (Sphere){(Vec3d){-2, 0, 6}, 1, (Vec3d){MAX_C, MAX_C, MIN_C}};
-    world.spheres_first[1] = (Sphere){(Vec3d){0, 0, 5}, 1, (Vec3d){MAX_C, MIN_C, MIN_C}};
-    world.spheres_first[2] = (Sphere){(Vec3d){2, 0, 4}, 1, (Vec3d){2 * MIN_C, 4 * MIN_C, MAX_C}};
-    world.spheres_first[3] = (Sphere){(Vec3d){0, 1 + R, 0}, R * R, (Vec3d){MIN_C, MAX_C, MIN_C}};
-    world.spheres_first[4] = (Sphere){(Vec3d){0, -1 - R, 0}, R * R, (Vec3d){MAX_C, MAX_C, MAX_C}};
+    world.spheres.first = malloc(num_spheres * sizeof(Sphere));
+    world.spheres.last = world.spheres.first + num_spheres;
+    world.spheres.first[0] = (Sphere){(Vec3d){-2, 0, 6}, 1, (Vec3d){MAX_C, MAX_C, MIN_C}};
+    world.spheres.first[1] = (Sphere){(Vec3d){0, 0, 5}, 1, (Vec3d){MAX_C, MIN_C, MIN_C}};
+    world.spheres.first[2] = (Sphere){(Vec3d){2, 0, 4}, 1, (Vec3d){2 * MIN_C, 4 * MIN_C, MAX_C}};
+    world.spheres.first[3] = (Sphere){(Vec3d){0, 1 + R, 0}, R * R, (Vec3d){MIN_C, MAX_C, MIN_C}};
+    world.spheres.first[4] = (Sphere){(Vec3d){0, -1 - R, 0}, R * R, (Vec3d){MAX_C, MAX_C, MAX_C}};
 
     let num_lights = 2;
-    world.lights_first = malloc(num_lights * sizeof(Light));
-    world.lights_last = world.lights_first + num_lights;
-    world.lights_first[0] = (Light){(Vec3d){+1, +1, +2}, muls(0.4, (Vec3d){1, 0.8, 0.5})};
-    world.lights_first[1] = (Light){(Vec3d){-1, -1, -2}, muls(0.4, (Vec3d){0.5, 0.5, 1})};
+    world.lights.first = malloc(num_lights * sizeof(Light));
+    world.lights.last = world.lights.first + num_lights;
+    world.lights.first[0] = (Light){(Vec3d){+1, +1, +2}, muls(0.4, (Vec3d){1, 0.8, 0.5})};
+    world.lights.first[1] = (Light){(Vec3d){-1, -1, -2}, muls(0.4, (Vec3d){0.5, 0.5, 1})};
     
     world.atmosphere_color = muls(0.3, (Vec3d){0.5, 0.5, 1});
     return world;
 }
 
 void freeWorld(World world) {
-    free(world.spheres_first);
-    free(world.lights_first);
-    world.spheres_first = NULL;
-    world.spheres_last = NULL;
-    world.lights_first = NULL;
-    world.lights_last = NULL;
+    free(world.spheres.first);
+    free(world.lights.first);
+    world.spheres.first = NULL;
+    world.spheres.last = NULL;
+    world.lights.first = NULL;
+    world.lights.last = NULL;
 }
 
 Intersection findSingleIntersection(
@@ -156,7 +164,7 @@ Vec3d shade(Intersection intersection, World world) {
         return (Vec3d){ 1, 1, 1 };
     }
     let color = shadeAtmosphere(intersection, world.atmosphere_color);
-    for (let light = world.lights_first; light != world.lights_last; ++light) {
+    for (let light = world.lights.first; light != world.lights.last; ++light) {
         color = add(color, shadeSingleLight(intersection, *light));
     }
     return color;
@@ -179,7 +187,7 @@ void writePixel(
     let yd = (double)(y - height / 2);
     let zd = (double)(height / 2);
     let direction = normalize((Vec3d){xd, yd, zd});
-    let intersection = findIntersection(start, direction, world.spheres_first, world.spheres_last);
+    let intersection = findIntersection(start, direction, world.spheres.first, world.spheres.last);
     let color = shade(intersection, world);
     let r = colorU8fromF64(color.x);
     let g = colorU8fromF64(color.y);
