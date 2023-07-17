@@ -10,7 +10,13 @@
 #define INIT_RANGE(range, count) do { \
     range.first = malloc(count * sizeof(*range.first)); \
     range.last = range.first + count; \
-} while (0)
+} while (0);
+
+#define FREE_RANGE(range) do { \
+    free(range.first); \
+    range.first = NULL; \
+    range.last = NULL; \
+} while (0);
 
 typedef struct {
     double x;
@@ -112,12 +118,8 @@ World makeWorld() {
 }
 
 void freeWorld(World world) {
-    free(world.spheres.first);
-    free(world.lights.first);
-    world.spheres.first = NULL;
-    world.spheres.last = NULL;
-    world.lights.first = NULL;
-    world.lights.last = NULL;
+    FREE_RANGE(world.spheres);
+    FREE_RANGE(world.lights);
 }
 
 Intersection findSingleIntersection(
