@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-
 #define let __auto_type // Requires GNUC. C23 also has auto.
 
 #define INIT_RANGE(range, count) do { \
@@ -157,7 +154,7 @@ Intersection findIntersection(Vec3d start, Vec3d direction, Spheres spheres) {
 }
 
 Vec3d shadeSingleLight(Intersection intersection, Light light) {
-    let geometry = MAX(-dot(light.direction, intersection.normal), 0.0);
+    let geometry = fmax(-dot(light.direction, intersection.normal), 0.0);
     return muls(geometry, mul(intersection.color, light.color));
 }
 
@@ -177,7 +174,7 @@ Vec3d shade(Intersection intersection, World world) {
 }
 
 int colorU8fromF64(double c) {
-    return (int)(MIN(255.0 * c, 255.0));
+    return (int)(fmin(255.0 * c, 255.0));
 }
 
 void writePixel(
