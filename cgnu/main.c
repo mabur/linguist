@@ -142,11 +142,9 @@ Intersection findSingleIntersection(
     return intersection;
 }
 
-Intersection findIntersection(
-    Vec3d start, Vec3d direction, const Sphere* spheres_first, const Sphere* spheres_last
-) {
+Intersection findIntersection(Vec3d start, Vec3d direction, Spheres spheres) {
     let i1 = makeIntersection();
-    for (let s = spheres_first; s != spheres_last; ++s) {
+    for (let s = spheres.first; s != spheres.last; ++s) {
         let i2 = findSingleIntersection(start, direction, *s);
         if (i2.distance < i1.distance) {
             i1 = i2;
@@ -192,7 +190,7 @@ void writePixel(
     let yd = (double)(y - height / 2);
     let zd = (double)(height / 2);
     let direction = normalize((Vec3d){xd, yd, zd});
-    let intersection = findIntersection(start, direction, world.spheres.first, world.spheres.last);
+    let intersection = findIntersection(start, direction, world.spheres);
     let color = shade(intersection, world);
     let r = colorU8fromF64(color.x);
     let g = colorU8fromF64(color.y);
