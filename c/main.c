@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-
 typedef struct {
     double x;
     double y;
@@ -141,7 +138,7 @@ Intersection findIntersection(
 }
 
 Vec3d shadeSingleLight(Intersection intersection, Light light) {
-    double geometry = MAX(-dot(light.direction, intersection.normal), 0.0);
+    double geometry = fmax(-dot(light.direction, intersection.normal), 0.0);
     return muls(geometry, mul(intersection.color, light.color));
 }
 
@@ -161,7 +158,7 @@ Vec3d shade(Intersection intersection, World world) {
 }
 
 int colorU8fromF64(double c) {
-    return (int)(MIN(255.0 * c, 255.0));
+    return (int)(fmin(255.0 * c, 255.0));
 }
 
 void writePixel(
