@@ -18,6 +18,9 @@
     (range).last = NULL; \
 } while (0);
 
+#define FOR_RANGE(it, range) \
+    for (__auto_type it = (range).first; it != (range).last; ++it)
+
 typedef struct {
     double x;
     double y;
@@ -144,8 +147,8 @@ Intersection findSingleIntersection(
 
 Intersection findIntersection(Vec3d start, Vec3d direction, Spheres spheres) {
     let i1 = makeIntersection();
-    for (let s = spheres.first; s != spheres.last; ++s) {
-        let i2 = findSingleIntersection(start, direction, *s);
+    FOR_RANGE(sphere, spheres) {
+        let i2 = findSingleIntersection(start, direction, *sphere);
         if (i2.distance < i1.distance) {
             i1 = i2;
         }
@@ -167,7 +170,7 @@ Vec3d shade(Intersection intersection, World world) {
         return (Vec3d){ 1, 1, 1 };
     }
     let color = shadeAtmosphere(intersection, world.atmosphere_color);
-    for (let light = world.lights.first; light != world.lights.last; ++light) {
+    FOR_RANGE(light, world.lights) {
         color = add(color, shadeSingleLight(intersection, *light));
     }
     return color;
