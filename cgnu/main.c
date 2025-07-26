@@ -147,7 +147,7 @@ Vec3d shade(Intersection intersection, World world) {
     }
     let color = shadeAtmosphere(intersection, world.atmosphere_color);
     FOR_RANGE(light, world.lights) {
-        color = color + shadeSingleLight(intersection, *light);
+        color += shadeSingleLight(intersection, *light);
     }
     return color;
 }
