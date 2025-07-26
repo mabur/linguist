@@ -4,6 +4,8 @@
 
 #define let __auto_type // Requires GNUC. C23 also has auto.
 
+typedef double Vec3d __attribute__((vector_size(32))); // gcc/clang vector extensions
+
 #define INIT_RANGE(range, count) do { \
     (range).first = malloc((count) * sizeof(*(range).first)); \
     (range).last = (range).first + (count); \
@@ -18,30 +20,9 @@
 #define FOR_RANGE(it, range) \
     for (__auto_type it = (range).first; it != (range).last; ++it)
 
-typedef struct {
-    double x;
-    double y;
-    double z;
-} Vec3d;
-
-Vec3d add(Vec3d a, Vec3d b) {
-    return (Vec3d){a.x + b.x, a.y + b.y, a.z + b.z};
-}
-
-Vec3d sub(Vec3d a, Vec3d b) {
-    return (Vec3d){a.x - b.x, a.y - b.y, a.z - b.z};
-}
-
-Vec3d mul(Vec3d a, Vec3d b) {
-    return (Vec3d){ a.x * b.x, a.y * b.y, a.z * b.z };
-}
-
-Vec3d muls(double a, Vec3d b) {
-    return (Vec3d){a * b.x, a * b.y, a * b.z};
-}
 
 double dot(Vec3d a, Vec3d b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
 double squaredNorm(Vec3d v) {
@@ -53,7 +34,7 @@ double norm(Vec3d v) {
 }
 
 Vec3d normalize(Vec3d v) {
-    return muls(1.0 / norm(v), v);
+    return v / norm(v);
 }
 
 typedef struct {
@@ -108,10 +89,10 @@ World makeWorld() {
     world.spheres.first[4] = (Sphere){(Vec3d){0, -1 - R, 0}, R * R, (Vec3d){MAX_C, MAX_C, MAX_C}};
     
     INIT_RANGE(world.lights, 2);
-    world.lights.first[0] = (Light){(Vec3d){+1, +1, +2}, muls(0.4, (Vec3d){1, 0.8, 0.5})};
-    world.lights.first[1] = (Light){(Vec3d){-1, -1, -2}, muls(0.4, (Vec3d){0.5, 0.5, 1})};
+    world.lights.first[0] = (Light){(Vec3d){+1, +1, +2}, 0.4 * (Vec3d){1, 0.8, 0.5}};
+    world.lights.first[1] = (Light){(Vec3d){-1, -1, -2}, 0.4 * (Vec3d){0.5, 0.5, 1}};
     
-    world.atmosphere_color = muls(0.3, (Vec3d){0.5, 0.5, 1});
+    world.atmosphere_color = 0.3 * (Vec3d){0.5, 0.5, 1};
     return world;
 }
 
@@ -124,7 +105,7 @@ Intersection findSingleIntersection(
     Vec3d start, Vec3d direction, Sphere sphere
 ) {
     let intersection = makeIntersection();
-    let offset = sub(sphere.position, start);
+    let offset = sphere.position - start;
     let c = dot(direction, offset);
     if (c < 0.0) {
         return intersection;
@@ -134,8 +115,8 @@ Intersection findSingleIntersection(
         return intersection;
     }
     intersection.distance = c - sqrt(discriminant);
-    intersection.position = add(start, muls(intersection.distance, direction));
-    intersection.normal = normalize(sub(intersection.position, sphere.position));
+    intersection.position = start + intersection.distance * direction;
+    intersection.normal = normalize(intersection.position - sphere.position);
     intersection.color = sphere.color;
     return intersection;
 }
@@ -153,20 +134,20 @@ Intersection findIntersection(Vec3d start, Vec3d direction, Spheres spheres) {
 
 Vec3d shadeSingleLight(Intersection intersection, Light light) {
     let geometry = fmax(-dot(light.direction, intersection.normal), 0.0);
-    return muls(geometry, mul(intersection.color, light.color));
+    return geometry * intersection.color * light.color;
 }
 
 Vec3d shadeAtmosphere(Intersection intersection, Vec3d atmosphere_color) {
-    return muls(sqrt(intersection.position.z), atmosphere_color);
+    return sqrt(intersection.position[2]) * atmosphere_color;
 }
 
 Vec3d shade(Intersection intersection, World world) {
     if (isinf(intersection.distance)) {
-        return (Vec3d){ 1, 1, 1 };
+        return (Vec3d){1, 1, 1};
     }
     let color = shadeAtmosphere(intersection, world.atmosphere_color);
     FOR_RANGE(light, world.lights) {
-        color = add(color, shadeSingleLight(intersection, *light));
+        color = color + shadeSingleLight(intersection, *light);
     }
     return color;
 }
@@ -190,9 +171,9 @@ void writePixel(
     let direction = normalize((Vec3d){xd, yd, zd});
     let intersection = findIntersection(start, direction, world.spheres);
     let color = shade(intersection, world);
-    let r = colorU8fromF64(color.x);
-    let g = colorU8fromF64(color.y);
-    let b = colorU8fromF64(color.z);
+    let r = colorU8fromF64(color[0]);
+    let g = colorU8fromF64(color[1]);
+    let b = colorU8fromF64(color[2]);
     fprintf(file, "%d %d %d ", r, g, b);
 }
 
